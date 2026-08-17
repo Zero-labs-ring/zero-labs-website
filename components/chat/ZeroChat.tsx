@@ -9,12 +9,23 @@ import { useChatHistory } from '@/hooks/useChatHistory'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { AuthModal, AuthModalView } from '@/components/auth/AuthModal'
 import { SoftGateModal } from '@/components/auth/SoftGateModal'
+import { SearchModal } from './modals/SearchModal'
+import { ProjectsModal } from './modals/ProjectsModal'
+import { MemoryModal } from './modals/MemoryModal'
+import { FilesModal } from './modals/FilesModal'
+import { SettingsModal } from './modals/SettingsModal'
+import { useMemory } from '@/hooks/useMemory'
+import { useProjects } from '@/hooks/useProjects'
+import { Artifact } from '@/types'
 
 function ZeroChatContent() {
   const { user } = useAuth()
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false)
   const [pageNavOpen, setPageNavOpen] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+
+  // Modals active state
+  const [activeModal, setActiveModal] = useState<'search' | 'projects' | 'memory' | 'files' | 'settings' | null>(null)
 
   // Auth Modals state
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -35,6 +46,27 @@ function ZeroChatContent() {
     refreshSessions,
   } = useChatHistory(user?.id)
 
+  // Memory hook
+  const {
+    memories,
+    memoryEnabled,
+    customInstructions,
+    addMemory,
+    removeMemory,
+    clearAllMemories,
+    toggleMemoryEnabled,
+    updateCustomInstructions,
+  } = useMemory(user?.id)
+
+  // Projects hook
+  const {
+    projects,
+    createProject,
+    deleteProject,
+    assignSessionToProject,
+    removeSessionFromProject,
+  } = useProjects(user?.id)
+
   // Auto-detect password recovery in URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -46,6 +78,21 @@ function ZeroChatContent() {
         setAuthModalOpen(true)
       }
     }
+  }, [])
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K for Search, Cmd+, for Settings)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setActiveModal(prev => (prev === 'search' ? null : 'search'))
+      } else if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        setActiveModal(prev => (prev === 'settings' ? null : 'settings'))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   // Refetch sessions when user logs in or out
@@ -107,6 +154,13 @@ function ZeroChatContent() {
     }
   }, [deleteSession, activeSessionId, chatState])
 
+  const handleClearAllHistory = useCallback(() => {
+    sessions.forEach(s => deleteSession(s.id))
+    setActiveSessionId(null)
+    chatState.setMessages([])
+    chatState.setActiveArtifact(null)
+  }, [sessions, deleteSession, chatState])
+
   const handleSoftGateSignIn = () => {
     setSoftGateOpen(false)
     setAuthModalView('signup')
@@ -119,6 +173,10 @@ function ZeroChatContent() {
       localStorage.setItem('zero_soft_gate_dismissed', 'true')
     } catch { }
   }
+
+  const handleOpenArtifact = useCallback((artifact: Artifact) => {
+    chatState.setActiveArtifact(artifact)
+  }, [chatState])
 
   return (
     <div className="flex h-[100dvh] w-full bg-[#F8F7F3] overflow-hidden text-[#111111] font-sans selection:bg-[#22C8FF] selection:text-white">
@@ -140,6 +198,7 @@ function ZeroChatContent() {
           setAuthModalView('login')
           setAuthModalOpen(true)
         }}
+        onToolClick={(toolId) => setActiveModal(toolId)}
       />
 
       {/* Right: page navigation (Zero Ring, Cowork, API, Research) */}
@@ -156,6 +215,53 @@ function ZeroChatContent() {
           send: handleSendMessage,
         }}
         onNewChat={handleNewChat}
+      />
+
+      {/* ── Feature Modals ── */}
+      <SearchModal
+        isOpen={activeModal === 'search'}
+        onClose={() => setActiveModal(null)}
+        sessions={sessions}
+        onSelectSession={handleSelectSession}
+      />
+
+      <ProjectsModal
+        isOpen={activeModal === 'projects'}
+        onClose={() => setActiveModal(null)}
+        projects={projects}
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        onCreateProject={createProject}
+        onDeleteProject={deleteProject}
+        onAssignSession={assignSessionToProject}
+        onRemoveSession={removeSessionFromProject}
+        onSelectSession={handleSelectSession}
+      />
+
+      <MemoryModal
+        isOpen={activeModal === 'memory'}
+        onClose={() => setActiveModal(null)}
+        memories={memories}
+        memoryEnabled={memoryEnabled}
+        customInstructions={customInstructions}
+        onAddMemory={addMemory}
+        onRemoveMemory={removeMemory}
+        onClearAll={clearAllMemories}
+        onToggleEnabled={toggleMemoryEnabled}
+        onUpdateInstructions={updateCustomInstructions}
+      />
+
+      <FilesModal
+        isOpen={activeModal === 'files'}
+        onClose={() => setActiveModal(null)}
+        sessions={sessions}
+        onOpenArtifact={handleOpenArtifact}
+      />
+
+      <SettingsModal
+        isOpen={activeModal === 'settings'}
+        onClose={() => setActiveModal(null)}
+        onClearHistory={handleClearAllHistory}
       />
 
       {/* ── Soft Gate Prompt (Appears on 5th question for guests) ── */}

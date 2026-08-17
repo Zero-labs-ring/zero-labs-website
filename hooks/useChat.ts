@@ -215,6 +215,24 @@ export function useChat(options?: UseChatOptions) {
                 content: m.text,
             }));
 
+            // Retrieve persistent memory context if enabled
+            let memoryContext: string[] = [];
+            let customInstructions = '';
+            try {
+                const uid = getOrCreateUserUid();
+                const memEnabled = localStorage.getItem(`zero_ai_memory_enabled_${uid}`) !== 'false';
+                if (memEnabled) {
+                    const storedMem = localStorage.getItem(`zero_ai_memory_items_${uid}`);
+                    if (storedMem) {
+                        const parsed = JSON.parse(storedMem);
+                        if (Array.isArray(parsed)) {
+                            memoryContext = parsed.map((item: any) => item.content);
+                        }
+                    }
+                    customInstructions = localStorage.getItem(`zero_custom_instructions_${uid}`) || '';
+                }
+            } catch {}
+
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -222,6 +240,8 @@ export function useChat(options?: UseChatOptions) {
                     messages: history,
                     model: modelName,
                     webSearch: webSearch,
+                    memory: memoryContext,
+                    customInstructions: customInstructions,
                 }),
                 signal: controller.signal,
             });

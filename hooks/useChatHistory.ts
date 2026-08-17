@@ -105,7 +105,7 @@ export function useChatHistory(customUserUid?: string | null) {
             await fetch(`/api/sessions/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: trimmed }),
+                body: JSON.stringify({ title: trimmed, user_uid: effectiveUid }),
             });
         } catch (err) {
             console.error('Failed to rename session on server:', err);

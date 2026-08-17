@@ -4,8 +4,8 @@ import { serperSearch, formatSearchResults } from '@/lib/search/serper';
 
 // Zero Labs Unified Cloud & GPU Hub Configuration
 const ZERO_GPU_BASE = process.env.ZERO_GPU_API_BASE || 'https://zero-gpu-server.vercel.app/v1';
-const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || 'zerotech13287';
-const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY || 'fw_575TCF1wxrZBCN5S5BoygZ';
+const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || '';
+const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY || '';
 
 export const runtime = 'edge';
 
@@ -150,10 +150,12 @@ async function callHighSpeedInference(
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { messages, model: requestedModel, webSearch = false } = body as {
+        const { messages, model: requestedModel, webSearch = false, memory = [], customInstructions = '' } = body as {
             messages: { role: string; content: string }[];
             model?: string;
             webSearch?: boolean;
+            memory?: string[];
+            customInstructions?: string;
         };
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -195,7 +197,16 @@ export async function POST(req: NextRequest) {
         }
 
         // ── 2. DYNAMIC SYSTEM PROMPT & LIVE WEB SEARCH ────────────────
-        const dynamicSystemPrompt = buildDynamicSystemPrompt(messages);
+        let dynamicSystemPrompt = buildDynamicSystemPrompt(messages);
+
+        if (Array.isArray(memory) && memory.length > 0) {
+            dynamicSystemPrompt += `\n\n[Persistent User Memory & Learned Preferences]:\n${memory.map(m => `- ${m}`).join('\n')}`;
+        }
+
+        if (customInstructions && typeof customInstructions === 'string' && customInstructions.trim()) {
+            dynamicSystemPrompt += `\n\n[User Custom Instructions]:\n${customInstructions.trim()}`;
+        }
+
         const fullMessages = [
             { role: 'system', content: dynamicSystemPrompt },
             ...messages,

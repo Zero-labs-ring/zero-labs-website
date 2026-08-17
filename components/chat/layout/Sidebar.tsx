@@ -41,14 +41,15 @@ interface ChatSidebarProps {
   onSearchChange?: (q: string) => void
   isLoading?: boolean
   onOpenAuthModal?: () => void
+  onToolClick?: (toolId: 'search' | 'projects' | 'memory' | 'files' | 'settings') => void
 }
 
 const navTools = [
-  { icon: Search, label: 'Search', id: 'search' },
-  { icon: Folder, label: 'Projects', id: 'projects' },
-  { icon: Brain, label: 'Memory', id: 'memory' },
-  { icon: FileText, label: 'Files', id: 'files' },
-  { icon: Settings, label: 'Settings', id: 'settings' },
+  { icon: Search, label: 'Search', id: 'search' as const },
+  { icon: Folder, label: 'Projects', id: 'projects' as const },
+  { icon: Brain, label: 'Memory', id: 'memory' as const },
+  { icon: FileText, label: 'Files', id: 'files' as const },
+  { icon: Settings, label: 'Settings', id: 'settings' as const },
 ]
 
 export function ChatSidebar({
@@ -64,6 +65,7 @@ export function ChatSidebar({
   onSearchChange,
   isLoading = false,
   onOpenAuthModal,
+  onToolClick,
 }: ChatSidebarProps) {
   const { user, signOut } = useAuth()
   const [isHovered, setIsHovered] = useState(false)
@@ -375,6 +377,9 @@ export function ChatSidebar({
                   <button
                     key={item.id}
                     type="button"
+                    onClick={() => {
+                      if (onToolClick) onToolClick(item.id)
+                    }}
                     className="w-full flex items-center gap-3.5 h-9 px-2.5 rounded-xl text-left text-[#111111]/70 hover:text-[#111111] hover:bg-[#ECEAE4] transition-all group cursor-pointer"
                     title={!isHovered ? item.label : undefined}
                   >
@@ -621,6 +626,10 @@ export function ChatSidebar({
                   <button
                     key={item.id}
                     type="button"
+                    onClick={() => {
+                      if (onToolClick) onToolClick(item.id)
+                      if (onClose) onClose()
+                    }}
                     className="w-full flex items-center gap-3 h-8.5 px-2.5 rounded-lg text-left text-xs font-medium text-[#111]/75 hover:bg-[#ECEAE4]"
                   >
                     <Icon className="w-4 h-4 text-[#111]/60" />

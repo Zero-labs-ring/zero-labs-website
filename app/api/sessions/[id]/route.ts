@@ -78,20 +78,40 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (messages_gz !== undefined) updatePayload.messages_gz = messages_gz;
         if (message_count !== undefined) updatePayload.message_count = message_count;
         if (model !== undefined) updatePayload.model = model;
-        if (user_uid !== undefined) updatePayload.user_uid = user_uid;
-
-        const { data, error } = await supabase
+        // First attempt a clean update on existing record
+        const { data: updatedData, error: updateError } = await supabase
             .from('chat_sessions')
-            .upsert({
-                id,
-                ...updatePayload,
-            })
+            .update(updatePayload)
+            .eq('id', id)
             .select()
-            .single();
+            .maybeSingle();
 
-        if (error) {
-            console.error('Supabase update session error:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+        if (updateError) {
+            console.error('Supabase update session error:', updateError);
+            return NextResponse.json({ error: updateError.message }, { status: 500 });
+        }
+
+        // If no row existed yet and user_uid is provided, insert it
+        let data = updatedData;
+        if (!data && user_uid) {
+            const { data: insertedData, error: insertError } = await supabase
+                .from('chat_sessions')
+                .insert({
+                    id,
+                    user_uid,
+                    title: title || 'New Chat',
+                    model: model || 'Titan Pro',
+                    message_count: message_count || 0,
+                    ...updatePayload,
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('Supabase insert session error:', insertError);
+                return NextResponse.json({ error: insertError.message }, { status: 500 });
+            }
+            data = insertedData;
         }
 
         return NextResponse.json({ session: data });
