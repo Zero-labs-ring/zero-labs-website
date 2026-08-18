@@ -239,7 +239,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
                           )}
 
                           <span className="text-sm font-medium text-[#111111]/70 tracking-tight">
-                            {searchStatus || (activeSkill ? '' : `Thinking with ${currentModelLabel}…`)}
+                            {searchStatus || (activeSkill ? '' : `Generating response…`)}
                           </span>
                         </div>
                       </div>

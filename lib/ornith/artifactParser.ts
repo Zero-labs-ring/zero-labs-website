@@ -21,13 +21,25 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     let text = raw;
     let activeSkill: string | null = null;
 
-    // 1. Strip reasoning <think>...</think> blocks cleanly
+    // 1. Strip reasoning blocks (<think>...</think>, <thought>...</thought>, <reasoning>...</reasoning>)
     if (text.includes('</think>')) {
         text = text.substring(text.lastIndexOf('</think>') + 8).trim();
     } else if (text.includes('<think>')) {
-        // Discard everything from <think> onwards while thinking
         text = text.substring(0, text.indexOf('<think>')).trim();
     }
+    if (text.includes('</thought>')) {
+        text = text.substring(text.lastIndexOf('</thought>') + 10).trim();
+    } else if (text.includes('<thought>')) {
+        text = text.substring(0, text.indexOf('<thought>')).trim();
+    }
+    if (text.includes('</reasoning>')) {
+        text = text.substring(text.lastIndexOf('</reasoning>') + 12).trim();
+    } else if (text.includes('<reasoning>')) {
+        text = text.substring(0, text.indexOf('<reasoning>')).trim();
+    }
+
+    // 1b. Strip leading model thinking headers like "Titan Pro Thinking", "Thinking with...", "Thinking:"
+    text = text.replace(/^(?:Titan (?:Pro|Ultra)(?: Thinking)?\s*|\*?Thinking(?: with [^\n]+)?:?\*?\s*)+/gi, '').trim();
 
     // 2. Detect and strip <skill_call name="..."> tags
     const skillMatch = text.match(/<skill(?:_call)?\s+name="([^"]+)"[^>]*>(?:<\/skill(?:_call)?>)?/i);

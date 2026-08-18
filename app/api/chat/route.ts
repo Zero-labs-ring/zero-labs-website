@@ -54,7 +54,8 @@ async function callZeroGpu(
     model: string,
     isUltra: boolean,
     webSearch: boolean = false,
-    clientSignal?: AbortSignal
+    clientSignal?: AbortSignal,
+    maxTokens?: number
 ): Promise<Response | null> {
     try {
         const res = await fetch(`${ZERO_GPU_BASE}/chat/completions`, {
@@ -68,7 +69,7 @@ async function callZeroGpu(
                 model,
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
-                max_tokens: isUltra ? 4096 : 3072,
+                max_tokens: maxTokens || (isUltra ? 16384 : 16384),
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
@@ -86,12 +87,14 @@ async function callZeroGpu(
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { messages, model: requestedModel, webSearch = false, memory = [], customInstructions = '' } = body as {
+        const { messages, model: requestedModel, webSearch = false, memory = [], customInstructions = '', max_tokens, maxTokens } = body as {
             messages: { role: string; content: string }[];
             model?: string;
             webSearch?: boolean;
             memory?: string[];
             customInstructions?: string;
+            max_tokens?: number;
+            maxTokens?: number;
         };
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -100,7 +103,7 @@ export async function POST(req: NextRequest) {
 
         const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
         const { base: modelId, isUltra } = normalizeModelId(requestedModel, webSearch);
-        const resolvedModelName = isUltra ? 'Titan Ultra Thinking' : 'Titan Pro Thinking';
+        const resolvedModelName = isUltra ? 'Titan Ultra' : 'Titan Pro';
 
         // ── 1. FAST PREDEFINED GREETINGS CACHE ────────────────────────
         // For simple greetings without web search, return instant fast stream
@@ -172,7 +175,8 @@ export async function POST(req: NextRequest) {
         }
 
         // ── 3. INFERENCE CLUSTER CALL DIRECTLY TO ZERO GPU (KAGGLE) ──
-        const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal);
+        const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 16384 : 16384);
+        const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
         if (!upstream || !upstream.ok) {
             const errText = upstream ? await upstream.text() : 'No active GPU instance responding';

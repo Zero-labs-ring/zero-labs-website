@@ -154,7 +154,7 @@ export function useChat(options?: UseChatOptions) {
         }
     }, [options]);
 
-    const send = useCallback(async (userText: string, modelName: string = 'Titan Pro Thinking', webSearch: boolean = false) => {
+    const send = useCallback(async (userText: string, modelName: string = 'Titan Pro', webSearch: boolean = false) => {
         // If a previous stream is running, abort cleanly
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
