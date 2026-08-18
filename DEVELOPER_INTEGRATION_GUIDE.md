@@ -12,10 +12,10 @@ Welcome to the **Zero Labs Unified Developer Documentation**. This guide provide
 
 | Service | URL / Value | Authentication |
 | :--- | :--- | :--- |
-| **API Base URL** | `https://zero-gpu-server.vercel.app` | — |
-| **OpenAI Compatible Base URL** | `https://zero-gpu-server.vercel.app/v1` | `Bearer zerotech13287` |
+| **API Base URL** | `https://zero-labs-gpu-server.vercel.app` | — |
+| **OpenAI Compatible Base URL** | `https://zero-labs-gpu-server.vercel.app/v1` | `Bearer zerotech13287` |
 | **API Key** | `zerotech13287` | Header: `Authorization: Bearer zerotech13287` |
-| **Search Engine Endpoint** | `https://zero-gpu-server.vercel.app/api/search` | *Public / No Auth Required* |
+| **Search Engine Endpoint** | `https://zero-labs-gpu-server.vercel.app/api/search` | *Public / No Auth Required* |
 
 ---
 
@@ -29,7 +29,7 @@ Retrieve the dynamic list of available models and their capabilities.
 
 #### cURL Request:
 ```bash
-curl https://zero-gpu-server.vercel.app/api/v1/models \
+curl https://zero-labs-gpu-server.vercel.app/api/v1/models \
   -H "Authorization: Bearer zerotech13287"
 ```
 
@@ -115,7 +115,7 @@ import urllib.parse
 import json
 
 def web_search(query: str, limit: int = 5) -> dict:
-    url = f"https://zero-gpu-server.vercel.app/api/search?q={urllib.parse.quote(query)}&limit={limit}"
+    url = f"https://zero-labs-gpu-server.vercel.app/api/search?q={urllib.parse.quote(query)}&limit={limit}"
     with urllib.request.urlopen(url) as response:
         return json.loads(response.read().decode('utf-8'))
 
@@ -136,7 +136,7 @@ for i, item in enumerate(results['results'], 1):
 ```typescript
 async function searchWeb(query: string, limit: number = 5) {
   const res = await fetch(
-    `https://zero-gpu-server.vercel.app/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    `https://zero-labs-gpu-server.vercel.app/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
   );
   const data = await res.json();
   return data;
@@ -154,7 +154,7 @@ searchWeb('space exploration discoveries', 3).then(data => {
 
 The `/v1/chat/completions` endpoint is a drop-in replacement for OpenAI API. It routes directly to your **2x Tesla T4 Kaggle GPU instances** with auto load balancing.
 
-- **Base URL**: `https://zero-gpu-server.vercel.app/v1`
+- **Base URL**: `https://zero-labs-gpu-server.vercel.app/v1`
 - **Endpoint**: `POST /v1/chat/completions` (or `/api/v1/chat/completions`)
 - **Header**: `Authorization: Bearer zerotech13287`
 
@@ -173,7 +173,7 @@ from openai import OpenAI
 
 # 1. Point client to Zero Labs gateway
 client = OpenAI(
-    base_url="https://zero-gpu-server.vercel.app/v1",
+    base_url="https://zero-labs-gpu-server.vercel.app/v1",
     api_key="zerotech13287"
 )
 
@@ -229,7 +229,7 @@ npm install openai
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  baseURL: 'https://zero-gpu-server.vercel.app/v1',
+  baseURL: 'https://zero-labs-gpu-server.vercel.app/v1',
   apiKey: 'zerotech13287',
 });
 
@@ -256,7 +256,7 @@ run().catch(console.error);
 
 ### 3.3 Raw cURL Request (Streaming SSE)
 ```bash
-curl -N -X POST https://zero-gpu-server.vercel.app/api/v1/chat/completions \
+curl -N -X POST https://zero-labs-gpu-server.vercel.app/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer zerotech13287" \
   -d '{
@@ -310,5 +310,5 @@ response = client.chat.completions.create(
 | :--- | :--- | :--- |
 | **`200 OK`** | Success | Response returned / streaming active |
 | **`401 Unauthorized`** | Invalid API Key | Ensure `Authorization: Bearer zerotech13287` is passed |
-| **`503 Service Unavailable`** | No GPU Online | The Kaggle GPU node is sleeping/offline. Open [https://zero-gpu-server.vercel.app](https://zero-gpu-server.vercel.app) and click **"Start GPU Node"**. It turns live in ~3 minutes |
+| **`503 Service Unavailable`** | No GPU Online | The Kaggle GPU node is sleeping/offline. Open [https://zero-labs-gpu-server.vercel.app](https://zero-labs-gpu-server.vercel.app) and click **"Start GPU Node"**. It turns live in ~3 minutes |
 | **`502 Bad Gateway`** | Tunnel Warming | The GPU tunnel is establishing connection; retry in 5–10 seconds |

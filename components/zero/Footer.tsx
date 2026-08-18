@@ -13,12 +13,13 @@ export default function Footer() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          alignItems: "center",
+          textAlign: "center",
+          gap: 20,
         }}
-        className="md:flex-row md:justify-between md:items-start"
       >
-        {/* Left */}
-        <div>
+        {/* Center Logo & Built in India */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <ZeroLogo size={0.42} color="#FFFFFF" />
           <p
             style={{
@@ -32,19 +33,25 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Right links */}
+        {/* Center links */}
         <nav
           aria-label="Footer navigation"
           style={{
             display: "flex",
             flexDirection: "row",
-            gap: 20,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 24,
           }}
         >
-          {["Privacy", "Contact", "Docs"].map((link) => (
+          {[
+            { label: "Privacy", href: "#" },
+            { label: "Contact", href: "#" },
+            { label: "Docs", href: "/docs" }
+          ].map((item) => (
             <a
-              key={link}
-              href="#"
+              key={item.label}
+              href={item.href}
               style={{
                 fontFamily: "var(--font-space-grotesk)",
                 fontSize: 13,
@@ -62,7 +69,7 @@ export default function Footer() {
                 (e.currentTarget as HTMLAnchorElement).style.color = "#666666"
               }}
             >
-              {link}
+              {item.label}
             </a>
           ))}
         </nav>

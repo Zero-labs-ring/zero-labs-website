@@ -20,54 +20,54 @@ export function useMemory(userUid?: string | null) {
   const [customInstructions, setCustomInstructions] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const effectiveUid = userUid || getOrCreateUserUid();
-  const storageKey = `${MEMORY_STORAGE_KEY}_${effectiveUid}`;
-  const enabledKey = `${MEMORY_ENABLED_KEY}_${effectiveUid}`;
-  const instructionsKey = `${CUSTOM_INSTRUCTIONS_KEY}_${effectiveUid}`;
+  // Strictly enforce storage key ONLY for authenticated users
+  const storageKey = userUid ? `${MEMORY_STORAGE_KEY}_${userUid}` : null;
+  const enabledKey = userUid ? `${MEMORY_ENABLED_KEY}_${userUid}` : null;
+  const instructionsKey = userUid ? `${CUSTOM_INSTRUCTIONS_KEY}_${userUid}` : null;
 
   useEffect(() => {
+    // If user is not logged in, clear memory in memory state and do NOT persist to storage
+    if (!userUid || !storageKey || !enabledKey || !instructionsKey) {
+      setMemories([]);
+      setCustomInstructions('');
+      setMemoryEnabled(false);
+      setIsLoaded(true);
+      return;
+    }
+
     try {
       const storedMem = localStorage.getItem(storageKey);
       if (storedMem) {
         const parsed = JSON.parse(storedMem);
         if (Array.isArray(parsed)) setMemories(parsed);
       } else {
-        // Default starter memory items
-        const defaultItems: MemoryItem[] = [
-          {
-            id: 'mem-1',
-            content: 'Prefers clear, modern, clean, and concise technical responses',
-            category: 'preference',
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 'mem-2',
-            content: 'Primary language stack: TypeScript, Next.js, Tailwind CSS, Python',
-            category: 'fact',
-            created_at: new Date().toISOString(),
-          },
-        ];
-        setMemories(defaultItems);
-        localStorage.setItem(storageKey, JSON.stringify(defaultItems));
+        setMemories([]);
       }
 
       const storedEnabled = localStorage.getItem(enabledKey);
       if (storedEnabled !== null) {
         setMemoryEnabled(storedEnabled === 'true');
+      } else {
+        setMemoryEnabled(true);
       }
 
       const storedInst = localStorage.getItem(instructionsKey);
       if (storedInst) {
         setCustomInstructions(storedInst);
+      } else {
+        setCustomInstructions('');
       }
     } catch (e) {
       console.warn('Failed to load memory settings from localStorage:', e);
     } finally {
       setIsLoaded(true);
     }
-  }, [storageKey, enabledKey, instructionsKey]);
+  }, [userUid, storageKey, enabledKey, instructionsKey]);
 
   const addMemory = useCallback((content: string, category: 'preference' | 'fact' | 'instruction' = 'preference') => {
+    // Do not store memory if user is not logged in
+    if (!userUid || !storageKey) return;
+
     const trimmed = content.trim();
     if (!trimmed) return;
 
@@ -85,9 +85,11 @@ export function useMemory(userUid?: string | null) {
       } catch {}
       return updated;
     });
-  }, [storageKey]);
+  }, [userUid, storageKey]);
 
   const removeMemory = useCallback((id: string) => {
+    if (!userUid || !storageKey) return;
+
     setMemories(prev => {
       const updated = prev.filter(m => m.id !== id);
       try {
@@ -95,28 +97,34 @@ export function useMemory(userUid?: string | null) {
       } catch {}
       return updated;
     });
-  }, [storageKey]);
+  }, [userUid, storageKey]);
 
   const clearAllMemories = useCallback(() => {
     setMemories([]);
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {}
+    if (storageKey) {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {}
+    }
   }, [storageKey]);
 
   const toggleMemoryEnabled = useCallback((enabled: boolean) => {
+    if (!userUid || !enabledKey) return;
+
     setMemoryEnabled(enabled);
     try {
       localStorage.setItem(enabledKey, enabled ? 'true' : 'false');
     } catch {}
-  }, [enabledKey]);
+  }, [userUid, enabledKey]);
 
   const updateCustomInstructions = useCallback((instructions: string) => {
+    if (!userUid || !instructionsKey) return;
+
     setCustomInstructions(instructions);
     try {
       localStorage.setItem(instructionsKey, instructions);
     } catch {}
-  }, [instructionsKey]);
+  }, [userUid, instructionsKey]);
 
   return {
     memories,

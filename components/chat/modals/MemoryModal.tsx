@@ -11,6 +11,8 @@ interface MemoryModalProps {
   memories: MemoryItem[];
   memoryEnabled: boolean;
   customInstructions: string;
+  isAuthenticated?: boolean;
+  onOpenAuthModal?: () => void;
   onAddMemory: (content: string, category: 'preference' | 'fact' | 'instruction') => void;
   onRemoveMemory: (id: string) => void;
   onClearAll: () => void;
@@ -24,6 +26,8 @@ export function MemoryModal({
   memories,
   memoryEnabled,
   customInstructions,
+  isAuthenticated = false,
+  onOpenAuthModal,
   onAddMemory,
   onRemoveMemory,
   onClearAll,
@@ -137,7 +141,29 @@ export function MemoryModal({
 
           {/* Content Body */}
           <div className="p-6 overflow-y-auto flex-1 min-h-[320px]">
-            {activeTab === 'memories' ? (
+            {!isAuthenticated ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#00C8FF]/10 text-[#00C8FF] flex items-center justify-center border border-[#00C8FF]/30">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <div className="space-y-1 max-w-sm">
+                  <h3 className="text-sm font-bold text-[#111]">Sign In to Save Memories</h3>
+                  <p className="text-xs text-[#111]/50 leading-relaxed">
+                    Personalized memories and custom instructions are saved exclusively for authenticated users across conversations.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    if (onOpenAuthModal) onOpenAuthModal();
+                  }}
+                  className="px-5 py-2 rounded-xl bg-[#111] hover:bg-black text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+                >
+                  Log In / Sign Up
+                </button>
+              </div>
+            ) : activeTab === 'memories' ? (
               <div className="space-y-4">
                 {/* Add New Memory Input */}
                 <form onSubmit={handleAdd} className="flex gap-2">

@@ -10,7 +10,20 @@ interface PageNavProps {
     onClose: () => void
 }
 
-const rawSections = [
+interface NavLinkItem {
+    label: string
+    sub: string
+    href: string
+    badge?: string
+    dot?: 'cyan' | 'green'
+}
+
+interface NavSection {
+    heading: string
+    links: NavLinkItem[]
+}
+
+const rawSections: NavSection[] = [
     {
         heading: 'Products',
         links: [
@@ -20,9 +33,12 @@ const rawSections = [
         ],
     },
     {
-        heading: 'Developers & Research',
+        heading: 'Developers',
         links: [
+            { label: 'API Platform', sub: 'Build intelligent apps with Zero API', href: '/api-platform', badge: 'NEW', dot: 'cyan' },
+            { label: 'Documentation', sub: 'Guides, SDKs & complete API reference', href: '/docs' },
             { label: 'Research', sub: 'Architectures, papers & benchmarks', href: '/research' },
+            { label: 'Status', sub: 'Real-time platform & inference uptime', href: '/status', dot: 'green' },
         ],
     },
 ]
@@ -118,6 +134,17 @@ export function PageNav({ open, onClose }: PageNavProps) {
                                                             }`}>
                                                                 {link.label}
                                                             </span>
+                                                            {link.badge && (
+                                                                <span className="bg-[#00C8FF] text-black text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide shadow-xs">
+                                                                    {link.badge}
+                                                                </span>
+                                                            )}
+                                                            {link.dot === 'green' && (
+                                                                <span className="relative flex h-2 w-2">
+                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <span className="text-[12.5px] text-[#111]/50 mt-0.5 font-normal">
                                                             {link.sub}

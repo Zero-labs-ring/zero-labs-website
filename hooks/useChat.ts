@@ -154,7 +154,7 @@ export function useChat(options?: UseChatOptions) {
         }
     }, [options]);
 
-    const send = useCallback(async (userText: string, modelName: string = 'Titan Pro', webSearch: boolean = false) => {
+    const send = useCallback(async (userText: string, modelName: string = 'Titan Pro Thinking', webSearch: boolean = false) => {
         // If a previous stream is running, abort cleanly
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -215,21 +215,27 @@ export function useChat(options?: UseChatOptions) {
                 content: m.text,
             }));
 
-            // Retrieve persistent memory context if enabled
+            // Retrieve persistent memory context ONLY for authenticated users
             let memoryContext: string[] = [];
             let customInstructions = '';
             try {
                 const uid = getOrCreateUserUid();
-                const memEnabled = localStorage.getItem(`zero_ai_memory_enabled_${uid}`) !== 'false';
-                if (memEnabled) {
-                    const storedMem = localStorage.getItem(`zero_ai_memory_items_${uid}`);
-                    if (storedMem) {
-                        const parsed = JSON.parse(storedMem);
-                        if (Array.isArray(parsed)) {
-                            memoryContext = parsed.map((item: any) => item.content);
+                // Check if user session exists in supabase auth token
+                const supabaseAuth = localStorage.getItem('sb-' + (process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
+                const isUserAuthenticated = !!supabaseAuth || !uid.startsWith('guest_');
+
+                if (isUserAuthenticated) {
+                    const memEnabled = localStorage.getItem(`zero_ai_memory_enabled_${uid}`) !== 'false';
+                    if (memEnabled) {
+                        const storedMem = localStorage.getItem(`zero_ai_memory_items_${uid}`);
+                        if (storedMem) {
+                            const parsed = JSON.parse(storedMem);
+                            if (Array.isArray(parsed)) {
+                                memoryContext = parsed.map((item: any) => item.content);
+                            }
                         }
+                        customInstructions = localStorage.getItem(`zero_custom_instructions_${uid}`) || '';
                     }
-                    customInstructions = localStorage.getItem(`zero_custom_instructions_${uid}`) || '';
                 }
             } catch {}
 

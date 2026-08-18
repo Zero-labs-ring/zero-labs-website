@@ -41,8 +41,8 @@ export function InputBar({ onSend, onStop, isTyping, collapsed = false, onExpand
   const micLevels = useMicAmplitude(isRecording, 3)
 
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
-  const models = ['Titan Pro', 'Titan Ultra']
-  const [selectedModel, setSelectedModel] = useState('Titan Pro')
+  const models = ['Titan Pro (Thinking)', 'Titan Ultra (Thinking)']
+  const [selectedModel, setSelectedModel] = useState('Titan Pro (Thinking)')
   const [showModels, setShowModels] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 

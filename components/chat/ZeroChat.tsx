@@ -244,6 +244,11 @@ function ZeroChatContent() {
         memories={memories}
         memoryEnabled={memoryEnabled}
         customInstructions={customInstructions}
+        isAuthenticated={!!user}
+        onOpenAuthModal={() => {
+          setAuthModalView('login');
+          setAuthModalOpen(true);
+        }}
         onAddMemory={addMemory}
         onRemoveMemory={removeMemory}
         onClearAll={clearAllMemories}

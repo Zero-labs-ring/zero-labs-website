@@ -1278,7 +1278,7 @@ const UniversalMascot = forwardRef<MascotHandle, UniversalMascotProps>(
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    padding: '10px 16px',
+                    padding: '10px 18px',
                     borderRadius: 999,
                     background: 'rgba(17, 17, 17, 0.9)',
                     color: '#FFF',
@@ -1293,18 +1293,6 @@ const UniversalMascot = forwardRef<MascotHandle, UniversalMascotProps>(
                 >
                   <span style={{ fontSize: 15 }}>🤖</span>
                   <span>Mascot Studio</span>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      background: '#22C8FF',
-                      color: '#000',
-                      padding: '2px 6px',
-                      borderRadius: 99,
-                      fontWeight: 700,
-                    }}
-                  >
-                    TEST
-                  </span>
                 </motion.button>
               ) : (
                 /* Expanded Control Panel */

@@ -1,4 +1,4 @@
-const ZERO_SEARCH_URL = process.env.ZERO_SEARCH_URL || 'https://zero-gpu-server.vercel.app/api/search';
+const ZERO_SEARCH_URL = process.env.ZERO_SEARCH_URL || 'https://zero-labs-gpu-server.vercel.app/api/search';
 const SERPER_API_KEY = process.env.SERPER_API_KEY;
 
 export interface SearchResult {

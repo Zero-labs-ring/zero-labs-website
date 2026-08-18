@@ -3,9 +3,8 @@ import { buildDynamicSystemPrompt } from '@/lib/skills';
 import { serperSearch, formatSearchResults } from '@/lib/search/serper';
 
 // Zero Labs Unified Cloud & GPU Hub Configuration
-const ZERO_GPU_BASE = process.env.ZERO_GPU_API_BASE || 'https://zero-gpu-server.vercel.app/v1';
-const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || '';
-const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY || '';
+const ZERO_GPU_BASE = process.env.ZERO_GPU_API_BASE || 'https://zero-labs-gpu-server.vercel.app/v1';
+const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || 'zerotech13287';
 
 export const runtime = 'edge';
 
@@ -49,21 +48,14 @@ function normalizeModelId(requestedModel?: string, webSearch?: boolean): { base:
     return { base, isUltra };
 }
 
-// Fast call to Zero GPU Cluster with strict 1.2s connection timeout
-async function callZeroGpuWithFastTimeout(
+// Direct call to Zero GPU / Kaggle Cluster
+async function callZeroGpu(
     messages: { role: string; content: string }[],
     model: string,
     isUltra: boolean,
     webSearch: boolean = false,
     clientSignal?: AbortSignal
 ): Promise<Response | null> {
-    const timeoutController = new AbortController();
-    const timeoutId = setTimeout(() => timeoutController.abort(), 1200);
-
-    const combinedSignal = clientSignal
-        ? (AbortSignal.any ? AbortSignal.any([clientSignal, timeoutController.signal]) : timeoutController.signal)
-        : timeoutController.signal;
-
     try {
         const res = await fetch(`${ZERO_GPU_BASE}/chat/completions`, {
             method: 'POST',
@@ -80,69 +72,13 @@ async function callZeroGpuWithFastTimeout(
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
-            signal: combinedSignal,
-        });
-
-        clearTimeout(timeoutId);
-        if (res.ok) return res;
-        return null;
-    } catch {
-        clearTimeout(timeoutId);
-        return null;
-    }
-}
-
-// Model routing: Titan Pro -> gpt-oss-120b | Titan Ultra -> kimi-k2p7-code
-async function callHighSpeedInference(
-    messages: { role: string; content: string }[],
-    isUltra: boolean,
-    signal?: AbortSignal
-): Promise<Response | null> {
-    if (!FIREWORKS_API_KEY) return null;
-
-    // Titan Ultra uses deep reasoning code engine; Titan Pro uses high-throughput general engine
-    const selectedModel = isUltra
-        ? 'accounts/fireworks/models/kimi-k2p7-code'
-        : 'accounts/fireworks/models/gpt-oss-120b';
-
-    try {
-        const res = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Accept': 'text/event-stream',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${FIREWORKS_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: selectedModel,
-                max_tokens: isUltra ? 6144 : 4096,
-                temperature: isUltra ? 0.6 : 0.7,
-                stream: true,
-                messages,
-            }),
-            signal,
+            signal: clientSignal,
         });
 
         if (res.ok) return res;
-
-        // Fallback router if primary is busy
-        return fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Accept': 'text/event-stream',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${FIREWORKS_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: 'accounts/fireworks/routers/glm-5p2-fast',
-                max_tokens: 4096,
-                temperature: 0.7,
-                stream: true,
-                messages,
-            }),
-            signal,
-        });
-    } catch {
+        return null;
+    } catch (err) {
+        console.error('Zero GPU Connection error:', err);
         return null;
     }
 }
@@ -164,7 +100,7 @@ export async function POST(req: NextRequest) {
 
         const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
         const { base: modelId, isUltra } = normalizeModelId(requestedModel, webSearch);
-        const resolvedModelName = isUltra ? 'Titan Ultra' : 'Titan Pro';
+        const resolvedModelName = isUltra ? 'Titan Ultra Thinking' : 'Titan Pro Thinking';
 
         // ── 1. FAST PREDEFINED GREETINGS CACHE ────────────────────────
         // For simple greetings without web search, return instant fast stream
@@ -235,17 +171,13 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // ── 3. INFERENCE CLUSTER CALL (PRO vs ULTRA) ──────────────────
-        let upstream = await callZeroGpuWithFastTimeout(searchInjectedMessages, modelId, isUltra, webSearch, req.signal);
+        // ── 3. INFERENCE CLUSTER CALL DIRECTLY TO ZERO GPU (KAGGLE) ──
+        const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal);
 
         if (!upstream || !upstream.ok) {
-            upstream = await callHighSpeedInference(searchInjectedMessages, isUltra, req.signal);
-        }
-
-        if (!upstream || !upstream.ok) {
-            const errText = upstream ? await upstream.text() : 'No active upstream available';
+            const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
             return new Response(
-                `Zero AI Cluster Error: ${errText || 'Inference cluster busy. Please try again.'}`,
+                `Zero AI GPU Cluster Error: ${errText || 'Your Kaggle GPU node is offline or initializing. Please check zero-labs-gpu-server dashboard.'}`,
                 { status: 503 }
             );
         }
