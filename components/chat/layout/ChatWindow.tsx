@@ -170,82 +170,90 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
                   });
                 })()}
 
-                {isTyping && (
-                  <motion.div
-                    key="thinking-indicator"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex w-full justify-start mb-6"
-                  >
-                    <div className="flex flex-col max-w-full">
-                      <div className="flex items-center gap-2 mb-2 pl-0.5">
-                        <span className={`w-1.5 h-1.5 rounded-full ${isUltraModel ? 'bg-[#9333EA]' : 'bg-[#00C8FF]'}`} />
-                        <span className={`text-xs font-semibold uppercase tracking-widest ${
-                          isUltraModel ? 'text-[#9333EA]' : 'text-[#111] opacity-50'
-                        }`}>
-                          {currentModelLabel}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-[#E5E4DF] rounded-2xl px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-                        {/* Unified Zero Ring Electric Cyan / Ultra Purple Orbit Animation */}
-                        <div className="relative flex items-center justify-center w-5 h-5 shrink-0">
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1.3, repeat: Infinity, ease: 'linear' }}
-                            className={`w-5 h-5 rounded-full border-[2px] ${
-                              isUltraModel
-                                ? 'border-[#9333EA]/20 border-t-[#9333EA] border-r-[#9333EA]'
-                                : 'border-[#00C8FF]/20 border-t-[#00C8FF] border-r-[#00C8FF]'
-                            }`}
-                          />
-                          <motion.div
-                            animate={{ scale: [0.75, 1.2, 0.75], opacity: [0.4, 1, 0.4] }}
-                            transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
-                            className={`absolute w-1.5 h-1.5 rounded-full ${
-                              isUltraModel ? 'bg-[#9333EA] shadow-[0_0_8px_rgba(147,51,234,0.7)]' : 'bg-[#00C8FF] shadow-[0_0_8px_rgba(0,200,255,0.7)]'
-                            }`}
-                          />
-                        </div>
+                {(() => {
+                  const lastMsg = messages && messages.length > 0 ? messages[messages.length - 1] : null;
+                  const isAssistantTypingText = isTyping && lastMsg && (lastMsg.role === 'assistant' || (lastMsg.role as string) === 'ai') && lastMsg.text.trim().length > 0;
+                  const showBottomIndicator = isTyping && (!isAssistantTypingText || searchStatus || activeSkill);
+                  
+                  if (!showBottomIndicator) return null;
 
-                        {/* Fluid Wave Dots & Status Text */}
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <div className="flex items-center gap-1">
-                            {[0, 1, 2].map((i) => (
-                              <motion.span
-                                key={i}
-                                animate={{
-                                  y: [0, -4, 0],
-                                  opacity: [0.35, 1, 0.35],
-                                  scale: [0.85, 1.15, 0.85],
-                                }}
-                                transition={{
-                                  duration: 0.9,
-                                  repeat: Infinity,
-                                  delay: i * 0.15,
-                                  ease: 'easeInOut',
-                                }}
-                                className={`w-1.5 h-1.5 rounded-full ${isUltraModel ? 'bg-[#9333EA]' : 'bg-[#00C8FF]'}`}
-                              />
-                            ))}
-                          </div>
-
-                          {activeSkill && (
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-200/80 animate-pulse flex items-center gap-1">
-                              <span>⚡</span>
-                              <span>Loading {activeSkill}…</span>
-                            </span>
-                          )}
-
-                          <span className="text-sm font-medium text-[#111111]/70 tracking-tight">
-                            {searchStatus || (activeSkill ? '' : `Generating response…`)}
+                  return (
+                    <motion.div
+                      key="thinking-indicator"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex w-full justify-start mb-6"
+                    >
+                      <div className="flex flex-col max-w-full">
+                        <div className="flex items-center gap-2 mb-2 pl-0.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${isUltraModel ? 'bg-[#9333EA]' : 'bg-[#00C8FF]'}`} />
+                          <span className={`text-xs font-semibold uppercase tracking-widest ${
+                            isUltraModel ? 'text-[#9333EA]' : 'text-[#111] opacity-50'
+                          }`}>
+                            {currentModelLabel}
                           </span>
                         </div>
+                        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-[#E5E4DF] rounded-2xl px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+                          {/* Unified Zero Ring Electric Cyan / Ultra Purple Orbit Animation */}
+                          <div className="relative flex items-center justify-center w-5 h-5 shrink-0">
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1.3, repeat: Infinity, ease: 'linear' }}
+                              className={`w-5 h-5 rounded-full border-[2px] ${
+                                isUltraModel
+                                  ? 'border-[#9333EA]/20 border-t-[#9333EA] border-r-[#9333EA]'
+                                  : 'border-[#00C8FF]/20 border-t-[#00C8FF] border-r-[#00C8FF]'
+                              }`}
+                            />
+                            <motion.div
+                              animate={{ scale: [0.75, 1.2, 0.75], opacity: [0.4, 1, 0.4] }}
+                              transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+                              className={`absolute w-1.5 h-1.5 rounded-full ${
+                                isUltraModel ? 'bg-[#9333EA] shadow-[0_0_8px_rgba(147,51,234,0.7)]' : 'bg-[#00C8FF] shadow-[0_0_8px_rgba(0,200,255,0.7)]'
+                              }`}
+                            />
+                          </div>
+
+                          {/* Fluid Wave Dots & Status Text */}
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <div className="flex items-center gap-1">
+                              {[0, 1, 2].map((i) => (
+                                <motion.span
+                                  key={i}
+                                  animate={{
+                                    y: [0, -4, 0],
+                                    opacity: [0.35, 1, 0.35],
+                                    scale: [0.85, 1.15, 0.85],
+                                  }}
+                                  transition={{
+                                    duration: 0.9,
+                                    repeat: Infinity,
+                                    delay: i * 0.15,
+                                    ease: 'easeInOut',
+                                  }}
+                                  className={`w-1.5 h-1.5 rounded-full ${isUltraModel ? 'bg-[#9333EA]' : 'bg-[#00C8FF]'}`}
+                                />
+                              ))}
+                            </div>
+
+                            {activeSkill && (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-200/80 animate-pulse flex items-center gap-1">
+                                <span>⚡</span>
+                                <span>Loading {activeSkill}…</span>
+                              </span>
+                            )}
+
+                            <span className="text-sm font-medium text-[#111111]/70 tracking-tight">
+                              {searchStatus || (activeSkill ? '' : `Generating response…`)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  );
+                })()}
               </AnimatePresence>
               <div className="h-4" />
             </div>
