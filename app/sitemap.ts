@@ -1,12 +1,29 @@
 import { MetadataRoute } from 'next'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: 'https://zero-ring-ai.vercel.app',
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    }
-  ]
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'https://zero-ring-ai.vercel.app'
 }
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = getBaseUrl()
+
+  const routes = [
+    '',
+    '/chat',
+    '/docs',
+    '/api-platform',
+    '/research',
+    '/cowork',
+    '/status',
+  ]
+
+  return routes.map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: route === '' ? 'daily' : 'weekly',
+    priority: route === '' ? 1.0 : 0.8,
+  }))
+}
+

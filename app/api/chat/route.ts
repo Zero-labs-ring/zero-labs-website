@@ -69,7 +69,7 @@ async function callZeroGpu(
                 model,
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
-                max_tokens: maxTokens || (isUltra ? 16384 : 16384),
+                max_tokens: maxTokens || (isUltra ? 118000 : 118000),
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
         }
 
         // ── 3. INFERENCE CLUSTER CALL DIRECTLY TO ZERO GPU (KAGGLE) ──
-        const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 16384 : 16384);
+        const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 118000 : 118000);
         const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
         if (!upstream || !upstream.ok) {

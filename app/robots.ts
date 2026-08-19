@@ -1,11 +1,20 @@
 import { MetadataRoute } from 'next'
 
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'https://zero-ring-ai.vercel.app'
+}
+
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = getBaseUrl()
+
   return {
     rules: {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://zero-ring-ai.vercel.app/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }
+
