@@ -81,7 +81,7 @@ export function ModelComparisonHero() {
             <div className="grid grid-cols-2 gap-3 mb-6 font-mono text-xs">
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">Context Window</span>
-                <span className="text-white font-bold">128,000 Tokens</span>
+                <span className="text-white font-bold">118,000 Tokens</span>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">Reasoning Style</span>
@@ -139,7 +139,7 @@ export function ModelComparisonHero() {
             <div className="grid grid-cols-2 gap-3 mb-6 font-mono text-xs">
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">Context Window</span>
-                <span className="text-white font-bold">128,000 Tokens</span>
+                <span className="text-white font-bold">118,000 Tokens</span>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">Reasoning Style</span>

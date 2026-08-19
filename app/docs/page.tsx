@@ -302,7 +302,7 @@ for chunk in response:
                 </div>
                 <p className="text-xs text-[#555550]">Low-latency agentic inference, RAG embeddings, and rapid conversational UI.</p>
                 <div className="font-mono text-xs text-[#0A0A0A] font-bold pt-2 space-y-1">
-                  <p>Context: 128,000 tokens</p>
+                  <p>Context: 118,000 tokens</p>
                   <p>Latency: &lt;500ms P50</p>
                 </div>
               </div>
@@ -314,7 +314,7 @@ for chunk in response:
                 </div>
                 <p className="text-xs text-[#555550]">Frontier multi-step reasoning, mathematical proof, code synthesis, and deep logic.</p>
                 <div className="font-mono text-xs text-[#0A0A0A] font-bold pt-2 space-y-1">
-                  <p>Context: 128,000 tokens</p>
+                  <p>Context: 118,000 tokens</p>
                   <p>Self-Verification CoT Engine</p>
                 </div>
               </div>
