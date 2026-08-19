@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  return 'https://zero-ring-ai.vercel.app'
+  return 'https://www.zerolabs.live'
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {

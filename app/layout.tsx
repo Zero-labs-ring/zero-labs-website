@@ -3,6 +3,10 @@ import './globals.css';
 import 'katex/dist/katex.min.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.zerolabs.live'),
+  alternates: {
+    canonical: '/',
+  },
   title: 'Zero AI — Real-Time Intelligence',
   description: 'AI assistant powered by Zero Ring & Titan models',
 };
