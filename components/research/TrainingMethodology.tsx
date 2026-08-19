@@ -36,7 +36,7 @@ Refinement: Apply mutex lock around buffer chunk dispatch
       id: 'sft-dpo',
       title: 'Curated SFT + DPO Preference Tuning',
       icon: Layers,
-      accent: '#A855F7',
+      accent: '#F4F3EF',
       tag: 'Optimization',
       headline: 'Dual-Phase Alignment for Extreme Precision and Verifiability',
       description:

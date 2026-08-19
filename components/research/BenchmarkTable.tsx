@@ -39,15 +39,15 @@ export function BenchmarkTable() {
             <tr className="border-b border-white/10 text-white/50 font-mono uppercase tracking-wider text-[11px]">
               <th className="py-3.5 px-3 min-w-[200px]">Benchmark</th>
               <th className="py-3.5 px-3">Category</th>
-              <th className="py-3.5 px-3 bg-purple-950/30 text-purple-300 font-bold border-x border-purple-500/20">
+              <th className="py-3.5 px-3 bg-[#00C8FF]/10 text-[#00C8FF] font-bold border-x border-[#00C8FF]/20">
                 <div className="flex items-center gap-1.5">
-                  <TitanLogo className="w-4 h-4" />
+                  <TitanLogo className="w-4 h-4 text-[#00C8FF]" />
                   <span>Zero Titan Ultra</span>
                 </div>
               </th>
-              <th className="py-3.5 px-3 bg-[#00C8FF]/10 text-[#00C8FF] font-bold border-r border-[#00C8FF]/20">
+              <th className="py-3.5 px-3 bg-[#F4F3EF]/10 text-[#F4F3EF] font-bold border-r border-[#F4F3EF]/20">
                 <div className="flex items-center gap-1.5">
-                  <TitanLogo className="w-4 h-4" />
+                  <TitanLogo className="w-4 h-4 text-[#F4F3EF]" />
                   <span>Zero Titan Pro</span>
                 </div>
               </th>
@@ -95,10 +95,10 @@ export function BenchmarkTable() {
                       {item.category}
                     </span>
                   </td>
-                  <td className="py-3.5 px-3 bg-purple-950/20 text-purple-300 font-bold border-x border-purple-500/10">
+                  <td className="py-3.5 px-3 bg-[#00C8FF]/10 text-[#00C8FF] font-bold border-x border-[#00C8FF]/10">
                     <span className="text-sm">{item.titanUltraScore.toFixed(1)}%</span>
                   </td>
-                  <td className="py-3.5 px-3 bg-[#00C8FF]/5 text-[#00C8FF] font-bold border-r border-[#00C8FF]/10">
+                  <td className="py-3.5 px-3 bg-[#F4F3EF]/10 text-[#F4F3EF] font-bold border-r border-[#F4F3EF]/10">
                     <span className="text-sm">{item.titanProScore.toFixed(1)}%</span>
                   </td>
                   <td className="py-3.5 px-3 text-white/70">

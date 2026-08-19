@@ -127,7 +127,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                       isUltra
                         ? 'text-[#00C8FF] font-bold'
                         : isPro
-                        ? 'text-[#00C8FF] font-bold'
+                        ? 'text-[#F4F3EF] font-bold'
                         : 'text-white/70'
                     }`}
                   >
@@ -140,7 +140,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                       isUltra
                         ? 'text-[#00C8FF] font-bold'
                         : isPro
-                        ? 'text-[#00C8FF] font-bold'
+                        ? 'text-[#F4F3EF] font-bold'
                         : 'text-white/60'
                     }
                   >
@@ -160,7 +160,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                     isUltra
                       ? 'bg-gradient-to-r from-[#0284C7] via-[#00C8FF] to-[#38BDF8] shadow-[0_0_12px_rgba(0,200,255,0.6)]'
                       : isPro
-                      ? 'bg-gradient-to-r from-[#0284C7] via-[#00C8FF] to-[#38BDF8] shadow-[0_0_12px_rgba(0,200,255,0.6)]'
+                      ? 'bg-gradient-to-r from-[#8E8D88] via-[#F4F3EF] to-[#FFFFFF] shadow-[0_0_12px_rgba(244,243,239,0.5)]'
                       : 'bg-white/20'
                   }`}
                 />
