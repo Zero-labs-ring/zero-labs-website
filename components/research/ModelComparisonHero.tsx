@@ -89,7 +89,7 @@ export function ModelComparisonHero() {
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">SWE-bench Verified</span>
-                <span className="text-[#00C8FF] font-bold">71.6% Resolved</span>
+                <span className="text-[#00C8FF] font-bold">73.1% Resolved</span>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">AIME 2026 Score</span>
