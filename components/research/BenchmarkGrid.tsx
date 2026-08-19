@@ -112,7 +112,7 @@ export function BenchmarkGrid() {
       )}
 
       {/* Benchmark Summary Bar */}
-      <div className="mt-12 p-6 bg-gradient-to-r from-purple-950/20 via-black to-[#00C8FF]/10 border border-white/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mt-12 p-6 bg-gradient-to-r from-[#0F172A] via-[#0A0E17] to-[#00C8FF]/10 border border-white/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#00C8FF]">
             <Sparkles className="w-5 h-5" />
@@ -130,7 +130,7 @@ export function BenchmarkGrid() {
             <span className="text-[10px] text-white/40 block">Verified Tests</span>
           </div>
           <div>
-            <span className="text-base font-bold text-purple-300">100%</span>
+            <span className="text-base font-bold text-[#38BDF8]">100%</span>
             <span className="text-[10px] text-white/40 block">Reproducible</span>
           </div>
         </div>

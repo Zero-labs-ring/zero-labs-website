@@ -111,22 +111,22 @@ export function ModelComparisonHero() {
         <motion.div
           whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
-          className="relative bg-gradient-to-b from-[#171124] to-[#0D0814] border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
+          className="relative bg-gradient-to-b from-[#0F172A] to-[#0A0E17] border border-[#38BDF8]/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#38BDF8]/15 rounded-full blur-3xl pointer-events-none" />
 
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center">
-                  <TitanLogo className="w-6 h-5" />
+                <div className="w-9 h-9 rounded-2xl bg-[#38BDF8]/20 border border-[#38BDF8]/40 flex items-center justify-center">
+                  <TitanLogo className="w-6 h-5 text-[#38BDF8]" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight">Zero Titan Ultra Thinking</h3>
-                  <span className="text-[11px] font-mono text-purple-300">Frontier Flagship Reasoning by Zero</span>
+                  <span className="text-[11px] font-mono text-[#38BDF8]">Frontier Flagship Reasoning by Zero</span>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[10px] font-mono font-bold">
+              <span className="px-2.5 py-1 rounded-full bg-[#38BDF8]/20 border border-[#38BDF8]/40 text-[#38BDF8] text-[10px] font-mono font-bold">
                 ZERO FLAGSHIP SOTA
               </span>
             </div>
@@ -143,25 +143,25 @@ export function ModelComparisonHero() {
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">Reasoning Style</span>
-                <span className="text-purple-300 font-bold">Deep Verification Hop</span>
+                <span className="text-[#38BDF8] font-bold">Deep Verification Hop</span>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">SWE-bench Verified</span>
-                <span className="text-purple-300 font-bold">79.3% Resolved</span>
+                <span className="text-[#38BDF8] font-bold">79.3% Resolved</span>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
                 <span className="text-white/40 text-[10px] block mb-1">AIME 2026 Score</span>
-                <span className="text-purple-300 font-bold">93.2% Pass@1</span>
+                <span className="text-[#38BDF8] font-bold">93.2% Pass@1</span>
               </div>
             </div>
           </div>
 
           <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
             <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-purple-400" />
+              <Shield className="w-3.5 h-3.5 text-[#38BDF8]" />
               SOTA across 12 Benchmark Disciplines
             </span>
-            <span className="text-purple-300 font-mono font-semibold">Active in Zero Chat</span>
+            <span className="text-[#38BDF8] font-mono font-semibold">Active in Zero Chat</span>
           </div>
         </motion.div>
       </div>

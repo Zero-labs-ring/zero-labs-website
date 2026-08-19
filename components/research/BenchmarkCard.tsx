@@ -125,7 +125,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   <span
                     className={`text-[12px] truncate max-w-[170px] ${
                       isUltra
-                        ? 'text-purple-300 font-bold'
+                        ? 'text-[#38BDF8] font-bold'
                         : isPro
                         ? 'text-[#00C8FF] font-bold'
                         : 'text-white/70'
@@ -138,7 +138,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   <span
                     className={
                       isUltra
-                        ? 'text-purple-300 font-bold'
+                        ? 'text-[#38BDF8] font-bold'
                         : isPro
                         ? 'text-[#00C8FF] font-bold'
                         : 'text-white/60'
@@ -158,9 +158,9 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   transition={{ duration: 0.8, delay: 0.1 + si * 0.06, ease: 'easeOut' }}
                   className={`h-full rounded-full ${
                     isUltra
-                      ? 'bg-gradient-to-r from-[#9333EA] via-[#A855F7] to-[#C084FC] shadow-[0_0_12px_rgba(168,85,247,0.6)]'
+                      ? 'bg-gradient-to-r from-[#0284C7] via-[#38BDF8] to-[#7DD3FC] shadow-[0_0_12px_rgba(56,189,248,0.6)]'
                       : isPro
-                      ? 'bg-gradient-to-r from-[#0284C7] via-[#00C8FF] to-[#38BDF8] shadow-[0_0_12px_rgba(0,200,255,0.6)]'
+                      ? 'bg-gradient-to-r from-[#0099FF] via-[#00C8FF] to-[#60A5FA] shadow-[0_0_12px_rgba(0,200,255,0.6)]'
                       : 'bg-white/20'
                   }`}
                 />
@@ -176,7 +176,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
           <CheckCircle2 className="w-3.5 h-3.5 text-[#00C8FF]" />
           Self-verified CoT
         </span>
-        <span className="text-purple-300 font-mono font-semibold bg-purple-950/50 border border-purple-500/30 px-2 py-0.5 rounded-md">
+        <span className="text-[#38BDF8] font-mono font-semibold bg-[#38BDF8]/10 border border-[#38BDF8]/30 px-2 py-0.5 rounded-md">
           +{delta}% vs Frontier SOTA
         </span>
       </div>
