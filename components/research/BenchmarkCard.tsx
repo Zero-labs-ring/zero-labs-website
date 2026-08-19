@@ -48,7 +48,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="relative flex flex-col bg-[#161616]/90 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-2xl p-5 shadow-[0_4px_30px_rgba(0,0,0,0.5)] transition-all duration-300 group hover:shadow-[0_8px_40px_rgba(0,200,255,0.08)]"
+      className="relative flex flex-col bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-sm transition-all duration-300 group hover:shadow-md"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -57,21 +57,21 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
             <span
               className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${
                 benchmark.category === 'Agentic'
-                  ? 'bg-[#00C8FF]/10 text-[#00C8FF] border-[#00C8FF]/30'
+                  ? 'bg-[#00C8FF]/15 text-[#0077AA] border-[#00C8FF]/40'
                   : benchmark.category === 'Coding'
-                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                  ? 'bg-purple-100 text-purple-700 border-purple-300'
                   : benchmark.category === 'Reasoning'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
                   : benchmark.category === 'Tools & MCP'
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                  : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  : 'bg-rose-100 text-rose-700 border-rose-300'
               }`}
             >
               {benchmark.category}
             </span>
-            <span className="text-[11px] text-white/40 font-mono">{benchmark.metric}</span>
+            <span className="text-[11px] text-slate-500 font-mono">{benchmark.metric}</span>
           </div>
-          <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+          <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
             {benchmark.title}
           </h3>
         </div>
@@ -80,7 +80,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
         <button
           type="button"
           onClick={() => setShowInfo(!showInfo)}
-          className="p-1.5 rounded-lg text-white/40 hover:text-white/90 hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
           title="Benchmark details & evaluation methodology"
           aria-label="Toggle benchmark details"
         >
@@ -89,7 +89,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
       </div>
 
       {/* Domain Subheading */}
-      <p className="text-xs text-white/60 mb-4 line-clamp-2 leading-relaxed">
+      <p className="text-xs text-slate-600 mb-4 line-clamp-2 leading-relaxed">
         {benchmark.summary}
       </p>
 
@@ -99,11 +99,11 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="mb-4 p-3 bg-black/60 border border-white/10 rounded-xl text-xs text-white/80 space-y-1.5"
+          className="mb-4 p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1.5 shadow-sm"
         >
-          <p><strong className="text-white">Domain:</strong> {benchmark.domain}</p>
-          <p><strong className="text-white">Setup:</strong> {benchmark.evaluationSetup}</p>
-          <p className="text-white/60 text-[11px] pt-1">{benchmark.description}</p>
+          <p><strong className="text-slate-900">Domain:</strong> {benchmark.domain}</p>
+          <p><strong className="text-slate-900">Setup:</strong> {benchmark.evaluationSetup}</p>
+          <p className="text-slate-500 text-[11px] pt-1">{benchmark.description}</p>
         </motion.div>
       )}
 
@@ -112,7 +112,6 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
         {benchmark.scores.map((s, si) => {
           const isUltra = s.type === 'titan-ultra';
           const isPro = s.type === 'titan-pro';
-          const isTitan = isUltra || isPro;
           const pct = Math.min(100, Math.max(10, (s.score / maxScore) * 100));
 
           return (
@@ -125,10 +124,10 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   <span
                     className={`text-[12px] truncate max-w-[170px] ${
                       isUltra
-                        ? 'text-[#00C8FF] font-bold'
+                        ? 'text-[#0077AA] font-bold'
                         : isPro
-                        ? 'text-[#F4F3EF] font-bold'
-                        : 'text-white/70'
+                        ? 'text-amber-800 font-bold'
+                        : 'text-slate-600'
                     }`}
                   >
                     {s.name}
@@ -138,10 +137,10 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   <span
                     className={
                       isUltra
-                        ? 'text-[#00C8FF] font-bold'
+                        ? 'text-[#0077AA] font-bold'
                         : isPro
-                        ? 'text-[#F4F3EF] font-bold'
-                        : 'text-white/60'
+                        ? 'text-amber-800 font-bold'
+                        : 'text-slate-600'
                     }
                   >
                     {s.score.toFixed(1)}%
@@ -150,7 +149,7 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
               </div>
 
               {/* Bar track */}
-              <div className="relative w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="relative w-full h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   whileInView={{ width: `${pct}%` }}
@@ -158,10 +157,10 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
                   transition={{ duration: 0.8, delay: 0.1 + si * 0.06, ease: 'easeOut' }}
                   className={`h-full rounded-full ${
                     isUltra
-                      ? 'bg-gradient-to-r from-[#0284C7] via-[#00C8FF] to-[#38BDF8] shadow-[0_0_12px_rgba(0,200,255,0.6)]'
+                      ? 'bg-gradient-to-r from-[#0284C7] via-[#00C8FF] to-[#38BDF8]'
                       : isPro
-                      ? 'bg-gradient-to-r from-[#8E8D88] via-[#F4F3EF] to-[#FFFFFF] shadow-[0_0_12px_rgba(244,243,239,0.5)]'
-                      : 'bg-white/20'
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600'
+                      : 'bg-slate-400'
                   }`}
                 />
               </div>
@@ -171,12 +170,12 @@ export function BenchmarkCard({ benchmark, index }: BenchmarkCardProps) {
       </div>
 
       {/* Delta Footer Badge */}
-      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
-        <span className="text-white/40 flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#00C8FF]" />
+      <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-[11px]">
+        <span className="text-slate-500 flex items-center gap-1">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#0099CC]" />
           Self-verified CoT
         </span>
-        <span className="text-[#00C8FF] font-mono font-semibold bg-[#00C8FF]/10 border border-[#00C8FF]/30 px-2 py-0.5 rounded-md">
+        <span className="text-[#0077AA] font-mono font-semibold bg-[#00C8FF]/15 border border-[#00C8FF]/30 px-2 py-0.5 rounded-md">
           +{delta}% vs Frontier SOTA
         </span>
       </div>

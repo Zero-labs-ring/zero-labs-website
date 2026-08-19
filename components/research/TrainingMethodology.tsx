@@ -104,21 +104,21 @@ where:
   ];
 
   return (
-    <div className="w-full bg-[#121212] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+    <div className="w-full bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
       {/* Glow background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#00C8FF]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#00C8FF]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Section Header */}
       <div className="max-w-3xl mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-mono mb-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-mono mb-3 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-[#00C8FF]" />
           <span>Training Methodology & Architecture</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-snug">
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-snug">
           Why Titan Outperforms Monolithic Frontier Models
         </h2>
-        <p className="text-sm sm:text-base text-white/60 mt-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
           Titan achieves state-of-the-art benchmarks not through raw brute-force scale alone, but via an engineered synthesis of dense agent trajectories, verifiable reward alignment, frontier distillation, and step-level self-verification.
         </p>
       </div>
@@ -134,8 +134,8 @@ where:
               onClick={() => setActiveTab(idx)}
               className={`text-left p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
                 isActive
-                  ? 'bg-white/10 border-[#00C8FF]/60 shadow-[0_0_20px_rgba(0,200,255,0.15)]'
-                  : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/10'
+                  ? 'bg-white border-[#00C8FF] shadow-md'
+                  : 'bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -143,16 +143,16 @@ where:
                   className="w-8 h-8 rounded-xl flex items-center justify-center"
                   style={{
                     backgroundColor: `${pillar.accent}20`,
-                    color: pillar.accent,
+                    color: pillar.accent === '#F4F3EF' ? '#D97706' : pillar.accent,
                   }}
                 >
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className="text-[10px] font-mono text-white/40">{`0${idx + 1}`}</span>
+                <span className="text-[10px] font-mono text-slate-400">{`0${idx + 1}`}</span>
               </div>
               <div>
-                <span className="text-[10px] font-mono text-white/50 block mb-0.5">{pillar.tag}</span>
-                <span className="text-xs sm:text-sm font-semibold text-white tracking-tight line-clamp-1">
+                <span className="text-[10px] font-mono text-slate-500 block mb-0.5">{pillar.tag}</span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight line-clamp-1">
                   {pillar.title}
                 </span>
               </div>
@@ -167,7 +167,7 @@ where:
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-black/40 border border-white/10 rounded-2xl p-5 sm:p-8 items-stretch"
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 items-stretch shadow-sm"
       >
         {/* Left Column: Narrative & Bullets */}
         <div className="lg:col-span-7 flex flex-col justify-between">
@@ -176,28 +176,31 @@ where:
               <span
                 className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md border"
                 style={{
-                  backgroundColor: `${pillars[activeTab].accent}15`,
-                  color: pillars[activeTab].accent,
-                  borderColor: `${pillars[activeTab].accent}30`,
+                  backgroundColor: pillars[activeTab].accent === '#F4F3EF' ? '#FEF3C7' : `${pillars[activeTab].accent}15`,
+                  color: pillars[activeTab].accent === '#F4F3EF' ? '#B45309' : pillars[activeTab].accent,
+                  borderColor: pillars[activeTab].accent === '#F4F3EF' ? '#FDE68A' : `${pillars[activeTab].accent}30`,
                 }}
               >
                 {pillars[activeTab].tag}
               </span>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-3">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">
               {pillars[activeTab].headline}
             </h3>
-            <p className="text-xs sm:text-sm text-white/70 leading-relaxed mb-6">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
               {pillars[activeTab].description}
             </p>
 
             {/* Bullets */}
             <div className="space-y-2.5 mb-6">
               {pillars[activeTab].bullets.map((b, bi) => (
-                <div key={bi} className="flex items-start gap-2 text-xs sm:text-sm text-white/80">
+                <div key={bi} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
                   <div
                     className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ backgroundColor: `${pillars[activeTab].accent}25`, color: pillars[activeTab].accent }}
+                    style={{
+                      backgroundColor: pillars[activeTab].accent === '#F4F3EF' ? '#FEF3C7' : `${pillars[activeTab].accent}25`,
+                      color: pillars[activeTab].accent === '#F4F3EF' ? '#B45309' : pillars[activeTab].accent,
+                    }}
                   >
                     <Check className="w-2.5 h-2.5" />
                   </div>
@@ -207,7 +210,7 @@ where:
             </div>
           </div>
 
-          <div className="pt-4 border-t border-white/5 flex items-center gap-2 text-xs text-white/40 font-mono">
+          <div className="pt-4 border-t border-slate-200 flex items-center gap-2 text-xs text-slate-500 font-mono">
             <span>Titan Deep Learning Research Group</span>
             <span>·</span>
             <span>Technical Report 2026</span>
@@ -216,16 +219,16 @@ where:
 
         {/* Right Column: Code & Mathematical Formulation */}
         <div className="lg:col-span-5 flex flex-col justify-center">
-          <div className="w-full bg-[#0D0D0D] border border-white/10 rounded-xl overflow-hidden shadow-inner flex flex-col h-full">
-            <div className="px-4 py-2.5 bg-white/5 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-inner flex flex-col h-full">
+            <div className="px-4 py-2.5 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="text-[11px] font-mono text-white/40">titan-spec.ts</span>
+              <span className="text-[11px] font-mono text-slate-400">titan-spec.ts</span>
             </div>
-            <pre className="p-4 text-[11px] sm:text-xs font-mono text-[#00C8FF] overflow-x-auto whitespace-pre leading-relaxed flex-1 bg-black/60">
+            <pre className="p-4 text-[11px] sm:text-xs font-mono text-[#38BDF8] overflow-x-auto whitespace-pre leading-relaxed flex-1 bg-slate-950">
               <code>{pillars[activeTab].codeSnippet}</code>
             </pre>
           </div>
