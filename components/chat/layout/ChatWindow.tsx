@@ -24,6 +24,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
   const {
     messages,
     sendMessage,
+    continueMessage,
     stop,
     isTyping,
     searchStatus,
@@ -165,6 +166,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
                         message={msg}
                         isStreaming={isTyping && isLastAssistant}
                         onArtifactView={setActiveArtifact}
+                        onContinue={continueMessage}
                       />
                     );
                   });

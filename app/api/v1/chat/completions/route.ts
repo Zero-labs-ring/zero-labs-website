@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
 
     const lastMsgContent = Array.isArray(body.messages) ? (body.messages[body.messages.length - 1]?.content || '') : '';
     const isCodeOrComplex = /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table|write|build|create|fix|debug|refactor|error|bug|sql|query|api|backend|class|struct|method|c\+\+|cpp|python|java|rust|typescript|javascript|html|css/i.test(lastMsgContent) || (typeof lastMsgContent === 'string' && lastMsgContent.length > 150);
-    const dynamicMaxTokens = body.max_tokens || body.maxTokens || (requestedModel.includes('ultra') || isCodeOrComplex ? 8192 : 4096);
+    const dynamicMaxTokens = body.max_tokens || body.maxTokens || (requestedModel.includes('ultra') || isCodeOrComplex ? 131072 : 65536);
 
     const forwardedBody = {
       ...body,
       model: internalModel,
-      max_tokens: Math.min(Math.max(dynamicMaxTokens, 512), 16384),
+      max_tokens: Math.min(Math.max(dynamicMaxTokens, 512), 131072),
     };
 
     // 5. Forward request to internal backend URL

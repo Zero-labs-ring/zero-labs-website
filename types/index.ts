@@ -19,6 +19,8 @@ export interface Message {
     timestamp: number;
     model?: string;
     webSearchUsed?: boolean;
+    isTruncated?: boolean;
+    isContinuing?: boolean;
 }
 
 export interface Tool {

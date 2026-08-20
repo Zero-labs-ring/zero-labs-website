@@ -14,6 +14,7 @@ interface MessageCardProps {
   message: Message
   isStreaming?: boolean
   onArtifactView: (artifact: Artifact) => void
+  onContinue?: (messageId: string) => void
 }
 
 /**
@@ -28,7 +29,7 @@ function normalizeMathDelimiters(content: string): string {
   return text
 }
 
-export function MessageCard({ message, isStreaming = false, onArtifactView }: MessageCardProps) {
+export function MessageCard({ message, isStreaming = false, onArtifactView, onContinue }: MessageCardProps) {
   const isAssistant = message.role === 'assistant' || (message as any).role === 'ai'
   const processedText = isAssistant ? normalizeMathDelimiters(message.text) : message.text
 
@@ -214,6 +215,20 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
                 {message.artifacts.map(a => (
                   <ArtifactCard key={a.id} artifact={a} onView={onArtifactView} />
                 ))}
+              </div>
+            )}
+
+            {/* Smart 1-Click Continue Code Generator */}
+            {message.isTruncated && !isStreaming && onContinue && (
+              <div className="mt-3.5 flex items-center gap-2">
+                <button
+                  onClick={() => onContinue(message.id)}
+                  type="button"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#00C8FF]/15 to-[#9333EA]/15 hover:from-[#00C8FF]/25 hover:to-[#9333EA]/25 border border-[#00C8FF]/30 hover:border-[#00C8FF]/50 text-[#111111] text-xs font-semibold shadow-xs transition-all cursor-pointer group"
+                >
+                  <span className="text-[#00C8FF] group-hover:scale-110 transition-transform font-bold">⚡</span>
+                  <span>Continue generating remaining code</span>
+                </button>
               </div>
             )}
           </div>

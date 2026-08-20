@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { buildDynamicSystemPrompt } from '@/lib/skills';
 import { serperSearch, formatSearchResults } from '@/lib/search/serper';
+import { isResponseTruncated } from '@/lib/ornith/artifactParser';
 
 const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
 const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
@@ -49,14 +50,14 @@ function normalizeModelId(requestedModel?: string, webSearch?: boolean): { base:
     return { base, isUltra };
 }
 
-// Calculate dynamic max_tokens based on intent, prompt complexity, model tier, and explicit caller request
+// Calculate dynamic max_tokens based on intent, prompt complexity, model tier, and explicit caller request (up to 128K / 131,072)
 function calculateDynamicMaxTokens(
     requestedMaxTokens?: number,
     isUltra: boolean = false,
     promptText: string = ''
 ): number {
     if (typeof requestedMaxTokens === 'number' && requestedMaxTokens > 0) {
-        return Math.min(Math.max(requestedMaxTokens, 512), 16384);
+        return Math.min(Math.max(requestedMaxTokens, 512), 131072);
     }
 
     const text = promptText.toLowerCase();
@@ -64,15 +65,15 @@ function calculateDynamicMaxTokens(
         /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table|write|build|create|fix|debug|refactor|error|bug|sql|query|api|backend|class|struct|method|c\+\+|cpp|python|java|rust|typescript|javascript|html|css/i.test(text) ||
         promptText.length > 150;
 
-    return isCodeOrComplexTask ? 8192 : 4096;
+    return isCodeOrComplexTask ? 131072 : 65536;
 }
 
-// Intelligently prune and compress older conversation history so input prompt stays compact (<3,500 tokens)
-// leaving maximum available headroom for the model's output generation (up to 8,192 tokens).
+// Intelligently prune and compress older conversation history so input prompt stays compact
+// leaving maximum available headroom for the model's 128K output generation.
 function optimizeConversationHistory(
     messages: { role: string; content: string }[]
 ): { role: string; content: string }[] {
-    if (messages.length <= 4) {
+    if (messages.length <= 6) {
         return messages;
     }
 
@@ -80,16 +81,16 @@ function optimizeConversationHistory(
     const firstUserMsgIndex = messages.findIndex(m => m.role === 'user');
     const rootUserMsg = firstUserMsgIndex !== -1 ? messages[firstUserMsgIndex] : null;
 
-    // Recent 8 messages kept with highest fidelity
-    const recentCount = Math.min(messages.length, 8);
+    // Recent 12 messages kept with highest fidelity
+    const recentCount = Math.min(messages.length, 12);
     const recentMessages = messages.slice(messages.length - recentCount);
 
     // Older intermediate messages: summarize/prune large past code blocks
     const intermediate = messages.slice(0, messages.length - recentCount);
     const compressedIntermediate = intermediate.map(msg => {
-        if (msg.role === 'assistant' && msg.content && msg.content.length > 400) {
+        if (msg.role === 'assistant' && msg.content && msg.content.length > 600) {
             const pruned = msg.content.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-                if (code.length > 250) {
+                if (code.length > 300) {
                     const lines = code.trim().split('\n');
                     const snippet = lines.slice(0, 4).join('\n');
                     return `\`\`\`${lang}\n${snippet}\n// ... [Full implementation provided in previous turn - ${lines.length} lines] ...\n\`\`\``;
@@ -117,7 +118,7 @@ function optimizeConversationHistory(
     return combined;
 }
 
-// Direct call to Zero GPU / Kaggle Cluster
+// Direct call to Zero GPU / Kaggle Cluster with 128K token ceiling
 async function callZeroGpu(
     messages: { role: string; content: string }[],
     model: string,
@@ -127,6 +128,7 @@ async function callZeroGpu(
     maxTokens?: number
 ): Promise<Response | null> {
     try {
+        const effectiveTokens = maxTokens || 131072;
         const res = await fetch(`${ZERO_GPU_BASE}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -138,7 +140,7 @@ async function callZeroGpu(
                 model,
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
-                max_tokens: maxTokens || (isUltra ? 8192 : 4096),
+                max_tokens: effectiveTokens,
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
@@ -271,91 +273,109 @@ export async function POST(req: NextRequest) {
                         }
                     }
 
-                    // Connect to Zero GPU cluster with optimal dynamic max_tokens (up to 8,192 for code)
-                    const effectiveMaxTokens = calculateDynamicMaxTokens(max_tokens || maxTokens, isUltra, lastUserMsg);
-                    const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
+                    // Connect to Zero GPU cluster with optimal dynamic max_tokens (128K) and transparent auto-continuation loop
+                    let currentMessages = [...searchInjectedMessages];
+                    let totalAccumulated = '';
+                    let turn = 0;
+                    const maxAutoTurns = 3;
 
-                    if (!upstream || !upstream.ok) {
-                        const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
-                        enqueue(JSON.stringify({
-                            type: 'error',
-                            error: `Zero AI GPU Cluster Error: ${errText || 'Inference cluster is offline or initializing.'}`
-                        }));
-                        enqueue('[DONE]');
-                        clearInterval(heartbeat);
-                        controller.close();
-                        return;
-                    }
+                    while (turn < maxAutoTurns && !req.signal.aborted) {
+                        turn++;
+                        const effectiveMaxTokens = calculateDynamicMaxTokens(max_tokens || maxTokens, isUltra, lastUserMsg);
+                        const upstream = await callZeroGpu(currentMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
-                    reader = upstream.body!.getReader();
-                    let buffer = '';
-
-                    while (true) {
-                        if (req.signal.aborted) {
-                            try { await reader.cancel(); } catch { }
-                            break;
-                        }
-
-                        const { done, value } = await reader.read();
-                        if (done) {
-                            // Fully drain any remaining lines in buffer on stream completion
-                            if (buffer.trim()) {
-                                const trailingLines = buffer.split(/\r?\n/);
-                                for (const line of trailingLines) {
-                                    if (!line.startsWith('data:')) continue;
-                                    const raw = line.slice(5).trim();
-                                    if (raw === '[DONE]') continue;
-                                    try {
-                                        const parsed = JSON.parse(raw);
-                                        const token = 
-                                            parsed.choices?.[0]?.delta?.content ?? 
-                                            parsed.choices?.[0]?.delta?.reasoning_content ?? 
-                                            parsed.choices?.[0]?.delta?.thought ?? 
-                                            parsed.choices?.[0]?.text ?? 
-                                            parsed.text ?? 
-                                            parsed.content ?? 
-                                            '';
-                                        if (token) {
-                                            enqueue(JSON.stringify({ type: 'token', token }));
-                                        }
-                                    } catch { }
-                                }
+                        if (!upstream || !upstream.ok) {
+                            if (turn === 1) {
+                                const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
+                                enqueue(JSON.stringify({
+                                    type: 'error',
+                                    error: `Zero AI GPU Cluster Error: ${errText || 'Inference cluster is offline or initializing.'}`
+                                }));
                             }
                             break;
                         }
 
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split(/\r?\n/);
-                        buffer = lines.pop() ?? '';
+                        reader = upstream.body!.getReader();
+                        let buffer = '';
+                        let turnAccumulated = '';
 
-                        for (const line of lines) {
-                            if (!line.startsWith('data:')) continue;
-                            const raw = line.slice(5).trim();
-
-                            if (raw === '[DONE]') {
-                                enqueue('[DONE]');
-                                clearInterval(heartbeat);
-                                controller.close();
-                                return;
+                        while (true) {
+                            if (req.signal.aborted) {
+                                try { await reader.cancel(); } catch { }
+                                break;
                             }
 
-                            try {
-                                const parsed = JSON.parse(raw);
-                                const token = 
-                                    parsed.choices?.[0]?.delta?.content ?? 
-                                    parsed.choices?.[0]?.delta?.reasoning_content ?? 
-                                    parsed.choices?.[0]?.delta?.thought ?? 
-                                    parsed.choices?.[0]?.text ?? 
-                                    parsed.text ?? 
-                                    parsed.content ?? 
-                                    '';
-                                if (token) {
-                                    enqueue(JSON.stringify({ type: 'token', token }));
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                if (buffer.trim()) {
+                                    const trailingLines = buffer.split(/\r?\n/);
+                                    for (const line of trailingLines) {
+                                        if (!line.startsWith('data:')) continue;
+                                        const raw = line.slice(5).trim();
+                                        if (raw === '[DONE]') continue;
+                                        try {
+                                            const parsed = JSON.parse(raw);
+                                            const token = 
+                                                parsed.choices?.[0]?.delta?.content ?? 
+                                                parsed.choices?.[0]?.delta?.text ?? 
+                                                parsed.text ?? 
+                                                parsed.content ?? 
+                                                '';
+                                            if (token) {
+                                                turnAccumulated += token;
+                                                enqueue(JSON.stringify({ type: 'token', token }));
+                                            }
+                                        } catch { }
+                                    }
                                 }
-                            } catch {
-                                // Skip non-JSON chunks
+                                break;
+                            }
+
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split(/\r?\n/);
+                            buffer = lines.pop() ?? '';
+
+                            for (const line of lines) {
+                                if (!line.startsWith('data:')) continue;
+                                const raw = line.slice(5).trim();
+
+                                if (raw === '[DONE]') {
+                                    break;
+                                }
+
+                                try {
+                                    const parsed = JSON.parse(raw);
+                                    const token = 
+                                        parsed.choices?.[0]?.delta?.content ?? 
+                                        parsed.choices?.[0]?.delta?.text ?? 
+                                        parsed.text ?? 
+                                        parsed.content ?? 
+                                        '';
+                                    if (token) {
+                                        turnAccumulated += token;
+                                        enqueue(JSON.stringify({ type: 'token', token }));
+                                    }
+                                } catch {
+                                    // Skip non-JSON chunks
+                                }
                             }
                         }
+
+                        totalAccumulated += turnAccumulated;
+
+                        // Check if the response was cut off midway and needs auto-continuation
+                        const truncated = isResponseTruncated(totalAccumulated);
+                        if (!truncated || turn >= maxAutoTurns || req.signal.aborted || !turnAccumulated.trim()) {
+                            break;
+                        }
+
+                        // Seamless auto-continuation prompt for next chunk
+                        const lastLines = totalAccumulated.trim().split('\n').slice(-4).join('\n');
+                        currentMessages = [
+                            ...searchInjectedMessages,
+                            { role: 'assistant', content: totalAccumulated },
+                            { role: 'user', content: `Continue writing the exact code directly from this cutoff point:\n\`\`\`\n${lastLines}\n\`\`\`\nDo not repeat code. Output the rest of the code until completely finished.` }
+                        ];
                     }
                 } catch (err: any) {
                     if (!req.signal.aborted) {

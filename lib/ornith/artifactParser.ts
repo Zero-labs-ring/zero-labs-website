@@ -26,6 +26,17 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
     text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
 
+    // 1b. Strip orphaned closing </think> or </thought> tags where the model omitted the opening tag
+    if (text.includes('</think>')) {
+        text = text.replace(/^[\s\S]*?<\/think>\s*/i, '');
+    }
+    if (text.includes('</thought>')) {
+        text = text.replace(/^[\s\S]*?<\/thought>\s*/i, '');
+    }
+    if (text.includes('</reasoning>')) {
+        text = text.replace(/^[\s\S]*?<\/reasoning>\s*/i, '');
+    }
+
     if (!isStreamFinal) {
         // If an in-flight think tag is still open at the end of the text
         text = text.replace(/<think>[\s\S]*$/gi, '');
@@ -35,7 +46,7 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
 
     text = text.trim();
 
-    // 1b. Strip leading model thinking headers like "Titan Pro Thinking", "Thinking with...", "Thinking:"
+    // 1c. Strip leading model thinking headers like "Titan Pro Thinking", "Thinking with...", "Thinking:"
     text = text.replace(/^(?:Titan (?:Pro|Ultra)(?: Thinking)?\s*|\*?Thinking(?: with [^\n]+)?:?\*?\s*)+/gi, '').trim();
 
     // 2. Detect and strip <skill_call name="..."> tags
@@ -118,6 +129,15 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
         isComplete = hasClosingTag || isStreamFinal;
     }
 
+    // 6. Graceful Code Block Auto-Balancing on Stream Completion
+    // If stream ended with an unclosed code block, balance it so syntax highlighting and markdown display cleanly
+    if (isStreamFinal && text) {
+        const backtickMatches = text.match(/```/g) || [];
+        if (backtickMatches.length % 2 === 1) {
+            text = text + '\n```';
+        }
+    }
+
     return { text: text.trim(), artifacts, isComplete, activeSkill };
 }
 
@@ -126,3 +146,17 @@ export function detectToolCall(text: string): string | null {
     const match = text.match(/<tool_call>\s*\{"name"\s*:\s*"web_search"\s*,\s*"arguments"\s*:\s*\{"query"\s*:\s*"([^"]+)"\s*\}\s*\}\s*<\/tool_call>/);
     return match ? match[1] : null;
 }
+
+// Helper to detect if an assistant response appears truncated (e.g. ends mid-statement or unclosed block)
+export function isResponseTruncated(raw: string): boolean {
+    if (!raw || raw.length < 50) return false;
+    const trimmed = raw.trim();
+    // Odd number of code fences
+    const fenceCount = (trimmed.match(/```/g) || []).length;
+    if (fenceCount % 2 === 1) return true;
+    
+    // Ends with trailing unclosed operators, open parens, or cut off keywords
+    const endsWithCutoff = /(=|\+|\-|\*|\/|,|\(|\[|\{|\b(?:return|if|else|for|while|const|let|var|int|float|double|char|void|def|class|function|struct|switch|case|import|export|from)\s*)$/i.test(trimmed);
+    return endsWithCutoff;
+}
+

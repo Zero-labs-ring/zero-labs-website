@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Message, Artifact } from '@/types';
-import { parseArtifacts } from '@/lib/ornith/artifactParser';
+import { parseArtifacts, isResponseTruncated } from '@/lib/ornith/artifactParser';
 import { compressMessages, decompressMessages } from '@/lib/storage/compression';
 import { getOrCreateUserUid } from '@/lib/storage/identity';
 
@@ -254,6 +254,8 @@ export function useChat(options?: UseChatOptions) {
                     webSearch: webSearch,
                     memory: memoryContext,
                     customInstructions: customInstructions,
+                    max_tokens: 131072,
+                    maxTokens: 131072,
                 }),
                 signal: controller.signal,
             });
@@ -419,6 +421,7 @@ export function useChat(options?: UseChatOptions) {
             if (accumulated) {
                 const { text, artifacts } = parseArtifacts(accumulated, true);
                 const finalArtifacts = artifacts.map(a => ({ ...a, isGenerating: false }));
+                const truncated = isResponseTruncated(accumulated);
                 finalAssistantMessage = {
                     id: assistantId,
                     role: 'assistant',
@@ -427,6 +430,7 @@ export function useChat(options?: UseChatOptions) {
                     timestamp: Date.now(),
                     model: detectedModelName || modelName,
                     webSearchUsed: webSearch,
+                    isTruncated: truncated,
                 };
                 setMessages(prev => prev.map(m => m.id === assistantId ? finalAssistantMessage : m));
                 setActiveArtifact(prev => {
@@ -459,6 +463,16 @@ export function useChat(options?: UseChatOptions) {
         }
     }, [messages, options, persistSession]);
 
+    const continueMessage = useCallback(async (msgId: string) => {
+        const target = messages.find(m => m.id === msgId);
+        if (!target) return;
+        const lastLines = (target.text || '').slice(-300).trim();
+        const prompt = lastLines 
+            ? `Please continue writing the exact code directly from this cutoff point:\n\`\`\`\n${lastLines}\n\`\`\`\nDo not repeat the previous code. Complete the remaining functions and output the full rest of the program.`
+            : `Please continue generating the rest of the code and complete the entire implementation.`;
+        await send(prompt, target.model || activeModelName || 'Titan Pro', false);
+    }, [messages, send, activeModelName]);
+
     return {
         sessionId,
         setSessionId,
@@ -466,6 +480,7 @@ export function useChat(options?: UseChatOptions) {
         setMessages,
         send,
         sendMessage: send,
+        continueMessage,
         stop,
         stopGenerating: stop,
         isStreaming,
