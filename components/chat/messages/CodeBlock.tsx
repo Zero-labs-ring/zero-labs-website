@@ -73,6 +73,31 @@ function extractCodeTitle(code: string, language: string): string {
   return (language ? language.toUpperCase() : 'Code')
 }
 
+function escapeHtml(str: string): string {
+  if (!str) return ''
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+const LANG_ALIASES: Record<string, string> = {
+  'c++': 'cpp',
+  'c#': 'csharp',
+  'py': 'python',
+  'js': 'javascript',
+  'ts': 'typescript',
+  'tsx': 'typescript',
+  'jsx': 'javascript',
+  'sh': 'bash',
+  'zsh': 'bash',
+  'html': 'xml',
+  'svg': 'xml',
+  'vue': 'html',
+}
+
 export function CodeBlock({ language = '', code }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
@@ -96,26 +121,29 @@ export function CodeBlock({ language = '', code }: CodeBlockProps) {
     }
   }
 
-  // Determine highlighted HTML with memoization & ignoreIllegals for smooth jitter-free streaming
+  // Determine highlighted HTML with guaranteed HTML escaping for unblocked rendering
   const { highlightedCode, langDisplay } = useMemo(() => {
-    let highlighted = code
-    let lang = language || 'code'
+    const rawLang = (language || '').toLowerCase().trim()
+    const resolvedLang = LANG_ALIASES[rawLang] || rawLang || 'code'
+    let highlighted = ''
 
     try {
-      if (language && hljs.getLanguage(language)) {
-        highlighted = hljs.highlight(code, { language, ignoreIllegals: true }).value
-      } else if (!language && code.length > 10) {
+      if (resolvedLang && hljs.getLanguage(resolvedLang)) {
+        highlighted = hljs.highlight(code, { language: resolvedLang, ignoreIllegals: true }).value
+      } else if (code.length > 10) {
         const auto = hljs.highlightAuto(code)
-        highlighted = auto.value
-        if (auto.language) lang = auto.language
+        highlighted = auto.value || escapeHtml(code)
       } else {
-        highlighted = code
+        highlighted = escapeHtml(code)
       }
     } catch {
-      highlighted = code
+      highlighted = escapeHtml(code)
     }
 
-    return { highlightedCode: highlighted, langDisplay: lang }
+    return { 
+      highlightedCode: highlighted || escapeHtml(code), 
+      langDisplay: resolvedLang || 'code' 
+    }
   }, [code, language])
 
   const codeTitle = useMemo(() => extractCodeTitle(code, langDisplay), [code, langDisplay])
