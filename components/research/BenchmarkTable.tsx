@@ -181,7 +181,7 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
 
 export function BenchmarkTable() {
   return (
-    <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 overflow-hidden shadow-sm">
+    <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 overflow-x-auto shadow-sm">
       {/* Table Header / Subtitle */}
       <div className="mb-4 pb-3 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
@@ -194,8 +194,7 @@ export function BenchmarkTable() {
       </div>
 
       {/* Single Model Comparison Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+      <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200 text-slate-500 font-mono uppercase tracking-wider text-[11px] bg-slate-100/70">
               <th className="py-3.5 px-4 min-w-[210px]">Model & Provider</th>
@@ -287,7 +286,6 @@ export function BenchmarkTable() {
             ))}
           </tbody>
         </table>
-      </div>
     </div>
   );
 }

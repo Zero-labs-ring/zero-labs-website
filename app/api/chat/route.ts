@@ -298,8 +298,9 @@ export async function POST(req: NextRequest) {
                         reader = upstream.body!.getReader();
                         let buffer = '';
                         let turnAccumulated = '';
+                        let streamFinished = false;
 
-                        while (true) {
+                        while (!streamFinished) {
                             if (req.signal.aborted) {
                                 try { await reader.cancel(); } catch { }
                                 break;
@@ -312,7 +313,7 @@ export async function POST(req: NextRequest) {
                                     for (const line of trailingLines) {
                                         if (!line.startsWith('data:')) continue;
                                         const raw = line.slice(5).trim();
-                                        if (raw === '[DONE]') continue;
+                                        if (raw === '[DONE]') { streamFinished = true; break; }
                                         try {
                                             const parsed = JSON.parse(raw);
                                             const token = 
@@ -340,6 +341,7 @@ export async function POST(req: NextRequest) {
                                 const raw = line.slice(5).trim();
 
                                 if (raw === '[DONE]') {
+                                    streamFinished = true;
                                     break;
                                 }
 
