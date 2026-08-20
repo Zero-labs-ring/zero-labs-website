@@ -39,10 +39,14 @@ export async function POST(req: NextRequest) {
       internalModel = process.env.INTERNAL_MODEL_PRO || 'titan-pro';
     }
 
+    const lastMsgContent = Array.isArray(body.messages) ? (body.messages[body.messages.length - 1]?.content || '') : '';
+    const isCodeOrComplex = /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table/i.test(lastMsgContent) || (typeof lastMsgContent === 'string' && lastMsgContent.length > 300);
+    const dynamicMaxTokens = body.max_tokens || body.maxTokens || (requestedModel.includes('ultra') || isCodeOrComplex ? 8192 : 4096);
+
     const forwardedBody = {
       ...body,
       model: internalModel,
-      max_tokens: body.max_tokens || body.maxTokens || 128000,
+      max_tokens: Math.min(Math.max(dynamicMaxTokens, 512), 16384),
     };
 
     // 5. Forward request to internal backend URL

@@ -49,6 +49,24 @@ function normalizeModelId(requestedModel?: string, webSearch?: boolean): { base:
     return { base, isUltra };
 }
 
+// Calculate dynamic max_tokens based on intent, prompt complexity, model tier, and explicit caller request
+function calculateDynamicMaxTokens(
+    requestedMaxTokens?: number,
+    isUltra: boolean = false,
+    promptText: string = ''
+): number {
+    if (typeof requestedMaxTokens === 'number' && requestedMaxTokens > 0) {
+        return Math.min(Math.max(requestedMaxTokens, 512), 16384);
+    }
+
+    const text = promptText.toLowerCase();
+    const isCodeOrComplexTask =
+        /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table/i.test(text) ||
+        promptText.length > 300;
+
+    return isCodeOrComplexTask ? 8192 : 4096;
+}
+
 // Direct call to Zero GPU / Kaggle Cluster
 async function callZeroGpu(
     messages: { role: string; content: string }[],
@@ -70,7 +88,7 @@ async function callZeroGpu(
                 model,
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
-                max_tokens: maxTokens || (isUltra ? 128000 : 128000),
+                max_tokens: maxTokens || (isUltra ? 8192 : 4096),
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
@@ -201,7 +219,7 @@ export async function POST(req: NextRequest) {
                     }
 
                     // Connect to Zero GPU cluster
-                    const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 128000 : 128000);
+                    const effectiveMaxTokens = calculateDynamicMaxTokens(max_tokens || maxTokens, isUltra, lastUserMsg);
                     const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
                     if (!upstream || !upstream.ok) {

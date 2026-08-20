@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             .single();
 
         if (error || !data) {
-            return NextResponse.json({ error: error?.message || 'Session not found' }, { status: 404 });
+            return NextResponse.json({ session: null }, { status: 200 });
         }
 
         const messages = decompressMessages(data.messages_gz);

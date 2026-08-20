@@ -22,13 +22,13 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     let activeSkill: string | null = null;
 
     // 1. Strip reasoning blocks (<think>...</think>, <thought>...</thought>, <reasoning>...</reasoning>)
-    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    text = text.replace(/[\s\S]*?<\/think>/gi, '');
     text = text.replace(/<think>[\s\S]*$/gi, '');
 
-    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    text = text.replace(/[\s\S]*?<\/thought>/gi, '');
     text = text.replace(/<thought>[\s\S]*$/gi, '');
 
-    text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+    text = text.replace(/[\s\S]*?<\/reasoning>/gi, '');
     text = text.replace(/<reasoning>[\s\S]*$/gi, '');
 
     text = text.trim();
