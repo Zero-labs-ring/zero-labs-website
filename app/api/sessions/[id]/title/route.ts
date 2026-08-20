@@ -3,8 +3,8 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
-const ZERO_GPU_BASE = process.env.ZERO_GPU_API_BASE || 'https://zero-labs-gpu-server.vercel.app/v1';
-const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || '';
+const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
+const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
 
 /**
  * POST /api/sessions/[id]/title

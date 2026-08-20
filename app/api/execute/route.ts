@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 const WANDBOX_COMPILERS: Record<string, { compiler: string; name: string }> = {
   c: { compiler: 'gcc-13.2.0-c', name: 'GCC 13.2.0 (C)' },

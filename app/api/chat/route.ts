@@ -2,11 +2,12 @@ import { NextRequest } from 'next/server';
 import { buildDynamicSystemPrompt } from '@/lib/skills';
 import { serperSearch, formatSearchResults } from '@/lib/search/serper';
 
-// Zero Labs Unified Cloud & GPU Hub Configuration
-const ZERO_GPU_BASE = process.env.ZERO_GPU_API_BASE || 'https://zero-labs-gpu-server.vercel.app/v1';
-const ZERO_GPU_API_KEY = process.env.ZERO_GPU_API_KEY || 'zerotech13287';
+const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
+const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
 
-export const runtime = 'edge';
+// Enable maximum allowed execution duration for Vercel Serverless Function (60s Hobby / up to 300s Pro)
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 // Fast pre-defined greetings dictionary (Instant 0ms TTFT & credit saver)
 const GREETING_RESPONSES: Record<string, string> = {
@@ -151,60 +152,73 @@ export async function POST(req: NextRequest) {
             ...messages,
         ];
 
-        let searchInjectedMessages = [...fullMessages];
-        let preloadedSearchResults = '';
-
-        if (webSearch && !modelId.startsWith('search-')) {
-            if (lastUserMsg) {
-                try {
-                    const searchData = await serperSearch(lastUserMsg, 5);
-                    if (searchData.length > 0) {
-                        preloadedSearchResults = formatSearchResults(searchData);
-                        searchInjectedMessages = [
-                            ...fullMessages,
-                            {
-                                role: 'system',
-                                content: `[Real-Time Live Web Search Context]:\n${preloadedSearchResults}\n\nUse this real-time factual data to answer accurately with citations.`
-                            }
-                        ];
-                    }
-                } catch (e) {
-                    console.warn('Search pre-fetch error:', e);
-                }
-            }
-        }
-
-        // ── 3. INFERENCE CLUSTER CALL DIRECTLY TO ZERO GPU (KAGGLE) ──
-        const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 118000 : 118000);
-        const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
-
-        if (!upstream || !upstream.ok) {
-            const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
-            return new Response(
-                `Zero AI GPU Cluster Error: ${errText || 'Your Kaggle GPU node is offline or initializing. Please check zero-labs-gpu-server dashboard.'}`,
-                { status: 503 }
-            );
-        }
-
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
-        const reader = upstream.body!.getReader();
 
+        // Return ReadableStream immediately with keep-alive heartbeats to prevent Vercel gateway timeouts
         const stream = new ReadableStream({
             async start(controller) {
-                let buffer = '';
-                const enqueue = (data: string) => controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                const enqueue = (data: string) => {
+                    try {
+                        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                    } catch { }
+                };
 
-                // Send resolved model info so UI accurately displays Titan Pro vs Titan Ultra
+                // 1. Immediately flush initial model_info frame so Vercel & client receive instant HTTP 200 OK
                 enqueue(JSON.stringify({ type: 'model_info', model: resolvedModelName }));
 
-                // If we performed search pre-fetch, notify frontend
-                if (preloadedSearchResults) {
-                    enqueue(JSON.stringify({ type: 'tool_start', query: 'Web Search' }));
-                    enqueue(JSON.stringify({ type: 'tool_result', results: preloadedSearchResults }));
-                }
+                // 2. Start a keep-alive ping interval (every 8s) to maintain active socket state while GPU thinks
+                const heartbeat = setInterval(() => {
+                    enqueue(JSON.stringify({ type: 'ping' }));
+                }, 8000);
+
+                let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+                let searchInjectedMessages = [...fullMessages];
+                let preloadedSearchResults = '';
 
                 try {
+                    // Pre-fetch live web search if requested
+                    if (webSearch && !modelId.startsWith('search-')) {
+                        if (lastUserMsg) {
+                            try {
+                                const searchData = await serperSearch(lastUserMsg, 5);
+                                if (searchData.length > 0) {
+                                    preloadedSearchResults = formatSearchResults(searchData);
+                                    searchInjectedMessages = [
+                                        ...fullMessages,
+                                        {
+                                            role: 'system',
+                                            content: `[Real-Time Live Web Search Context]:\n${preloadedSearchResults}\n\nUse this real-time factual data to answer accurately with citations.`
+                                        }
+                                    ];
+                                    enqueue(JSON.stringify({ type: 'tool_start', query: 'Web Search' }));
+                                    enqueue(JSON.stringify({ type: 'tool_result', results: preloadedSearchResults }));
+                                }
+                            } catch (e) {
+                                console.warn('Search pre-fetch error:', e);
+                            }
+                        }
+                    }
+
+                    // Connect to Zero GPU cluster
+                    const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 118000 : 118000);
+                    const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
+
+                    if (!upstream || !upstream.ok) {
+                        const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
+                        enqueue(JSON.stringify({
+                            type: 'error',
+                            error: `Zero AI GPU Cluster Error: ${errText || 'Inference cluster is offline or initializing.'}`
+                        }));
+                        enqueue('[DONE]');
+                        clearInterval(heartbeat);
+                        controller.close();
+                        return;
+                    }
+
+                    reader = upstream.body!.getReader();
+                    let buffer = '';
+
                     while (true) {
                         if (req.signal.aborted) {
                             try { await reader.cancel(); } catch { }
@@ -224,6 +238,7 @@ export async function POST(req: NextRequest) {
 
                             if (raw === '[DONE]') {
                                 enqueue('[DONE]');
+                                clearInterval(heartbeat);
                                 controller.close();
                                 return;
                             }
@@ -244,19 +259,18 @@ export async function POST(req: NextRequest) {
                         console.error('Stream processing error:', err);
                     }
                 } finally {
+                    clearInterval(heartbeat);
+                    if (reader) {
+                        try { await reader.cancel(); } catch { }
+                    }
                     try {
                         enqueue('[DONE]');
                         controller.close();
                     } catch { }
-                    try {
-                        await reader.cancel();
-                    } catch { }
                 }
             },
             async cancel(reason) {
-                try {
-                    await reader.cancel(reason);
-                } catch { }
+                try { } catch { }
             }
         });
 

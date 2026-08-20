@@ -1,3 +1,8 @@
 {
-  "name": "zero-ring-ai"
+  "name": "zero-ring-ai",
+  "functions": {
+    "app/api/**/*": {
+      "maxDuration": 60
+    }
+  }
 }

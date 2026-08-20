@@ -18,7 +18,7 @@ export function BenchmarkGrid() {
             Industry Benchmark Model Comparison
           </h2>
           <p className="text-sm text-slate-600 mt-1 max-w-xl">
-            Titan Ultra Thinking and Titan Pro Thinking evaluated across industry-standard agentic, reasoning, and multi-modal benchmarks against leading frontier models.
+            Titan Pro Thinking and Titan Ultra Thinking evaluated across industry-standard reasoning, coding, and scientific benchmarks against August 2026 frontier models.
           </p>
         </div>
       </div>

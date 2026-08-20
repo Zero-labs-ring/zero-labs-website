@@ -20,25 +20,25 @@ export default function StatusPage() {
 
   const services = [
     {
-      name: 'API Gateway & Global Router',
+      name: 'API Gateway',
       status: 'Operational',
       uptime: '99.98% uptime (30d)',
       latency: '24ms'
     },
     {
-      name: 'Titan Inference Clusters (20B & 90B)',
+      name: 'Inference Engine',
       status: 'Operational',
       uptime: '99.95% uptime (30d)',
       latency: '210ms P50'
     },
     {
-      name: 'Supabase Vector & Partitioned Storage',
+      name: 'Storage & Memory Layer',
       status: 'Operational',
       uptime: '100.00% uptime (30d)',
       latency: '12ms'
     },
     {
-      name: 'Whisper STT Transcription Service',
+      name: 'Voice Processing',
       status: 'Operational',
       uptime: '99.99% uptime (30d)',
       latency: '340ms'

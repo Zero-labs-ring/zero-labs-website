@@ -1,36 +1,34 @@
-# 📘 Zero Labs Unified Cloud & GPU Hub — Developer Integration Guide
+# 📘 Zero Labs Unified API — Developer Integration Guide
 
-Welcome to the **Zero Labs Unified Developer Documentation**. This guide provides complete, production-ready code examples and API reference for integrating with:
-1. **Live Web Search Engine API** (`/api/search`)
-2. **Model Selector API** (`/api/v1/models`)
-3. **OpenAI-Compatible Chat Completions & Streaming API** (`/v1/chat/completions`)
-4. **Search-Augmented AI Generation (RAG)**
+Welcome to the **Zero Labs Developer Documentation**. This guide provides complete, production-ready code examples and API reference for integrating with:
+1. **Model Selector API** (`/api/v1/models`)
+2. **OpenAI-Compatible Chat Completions & Streaming API** (`/v1/chat/completions`)
+3. **Embeddings API** (`/v1/embeddings`)
 
 ---
 
-## 🔑 Permanent Credentials & Base URLs
+## 🔑 Base URLs & Authentication
 
 | Service | URL / Value | Authentication |
 | :--- | :--- | :--- |
-| **API Base URL** | `https://zero-labs-gpu-server.vercel.app` | — |
-| **OpenAI Compatible Base URL** | `https://zero-labs-gpu-server.vercel.app/v1` | `Bearer zerotech13287` |
-| **API Key** | `zerotech13287` | Header: `Authorization: Bearer zerotech13287` |
-| **Search Engine Endpoint** | `https://zero-labs-gpu-server.vercel.app/api/search` | *Public / No Auth Required* |
+| **API Base URL** | `https://api.zerolabs.live` | — |
+| **OpenAI Compatible Base URL** | `https://api.zerolabs.live/v1` | `Bearer $ZERO_API_KEY` |
+| **API Key Header** | `Authorization: Bearer $ZERO_API_KEY` | Obtain from Dashboard |
 
 ---
 
 ## 🧠 Part 1: Models & Model Selection API
 
 ### 1.1 List All Available Models
-Retrieve the dynamic list of available models and their capabilities.
+Retrieve the list of available models and their capabilities.
 
 - **Endpoint**: `GET /api/v1/models` (or `GET /v1/models`)
-- **Headers**: `Authorization: Bearer zerotech13287`
+- **Headers**: `Authorization: Bearer $ZERO_API_KEY`
 
 #### cURL Request:
 ```bash
-curl https://zero-labs-gpu-server.vercel.app/api/v1/models \
-  -H "Authorization: Bearer zerotech13287"
+curl https://api.zerolabs.live/v1/models \
+  -H "Authorization: Bearer $ZERO_API_KEY"
 ```
 
 #### JSON Response:
@@ -40,51 +38,13 @@ curl https://zero-labs-gpu-server.vercel.app/api/v1/models \
   "data": [
     {
       "id": "titan-pro",
-      "name": "Titan Pro 9B",
       "object": "model",
-      "description": "High-throughput dual-T4 Titan Pro 9B model with MTP acceleration (64 max batch).",
-      "context_window": 8192,
-      "tier": "standard"
-    },
-    {
-      "id": "pro",
-      "name": "Titan Pro 9B (Short Alias)",
-      "object": "model",
-      "description": "Alias for Titan Pro 9B.",
-      "context_window": 8192,
-      "tier": "standard"
+      "owned_by": "zerolabs"
     },
     {
       "id": "titan-ultra",
-      "name": "Titan Ultra 27B",
       "object": "model",
-      "description": "Ultra-reasoning Titan Ultra 27B Q4_K_M model with dual-T4 GPU offloading.",
-      "context_window": 4096,
-      "tier": "premium"
-    },
-    {
-      "id": "ultra",
-      "name": "Titan Ultra 27B (Short Alias)",
-      "object": "model",
-      "description": "Alias for Titan Ultra 27B.",
-      "context_window": 4096,
-      "tier": "premium"
-    },
-    {
-      "id": "search-pro",
-      "name": "Titan Pro + Live Web Search",
-      "object": "model",
-      "description": "Titan Pro augmented with live real-time internet search context and citations.",
-      "context_window": 8192,
-      "tier": "standard"
-    },
-    {
-      "id": "search-ultra",
-      "name": "Titan Ultra + Live Web Search",
-      "object": "model",
-      "description": "Titan Ultra deep reasoning with real-time web search retrieval.",
-      "context_window": 4096,
-      "tier": "premium"
+      "owned_by": "zerolabs"
     }
   ]
 }
@@ -92,75 +52,17 @@ curl https://zero-labs-gpu-server.vercel.app/api/v1/models \
 
 ---
 
-## 🔍 Part 2: Live Real-Time Web Search API
+## 💬 Part 2: OpenAI-Compatible LLM Chat API
 
-The Search Engine provides unblocked, low-latency (<500ms) real-time web search results extracted across global feeds with clean titles, publisher metadata, and snippets.
+The `/v1/chat/completions` endpoint is a drop-in replacement for the OpenAI API.
 
-- **Endpoint**: `GET /api/search`
-- **Method**: `GET`
-- **Authentication**: None required
-
-### Query Parameters:
-| Parameter | Type | Required | Description | Example |
-| :--- | :--- | :--- | :--- | :--- |
-| `q` or `query` | `string` | **Yes** | Search keywords | `q=latest+ai+models` |
-| `limit` | `number` | Optional | Number of results (1–10, default: `5`) | `limit=3` |
-
----
-
-### 2.1 Python Search Example (No External Dependencies)
-```python
-import urllib.request
-import urllib.parse
-import json
-
-def web_search(query: str, limit: int = 5) -> dict:
-    url = f"https://zero-labs-gpu-server.vercel.app/api/search?q={urllib.parse.quote(query)}&limit={limit}"
-    with urllib.request.urlopen(url) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-# Example Query
-results = web_search("latest quantum computing milestones", limit=3)
-print(f"Total Results: {results['count']} (Fetched in {results['latency_ms']}ms)\n")
-
-for i, item in enumerate(results['results'], 1):
-    print(f"[{i}] {item['title']}")
-    print(f"    Source: {item['source']}")
-    print(f"    URL:    {item['url']}")
-    print(f"    Text:   {item['snippet']}\n")
-```
-
----
-
-### 2.2 JavaScript / TypeScript Search Example (Browser & Node.js)
-```typescript
-async function searchWeb(query: string, limit: number = 5) {
-  const res = await fetch(
-    `https://zero-labs-gpu-server.vercel.app/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
-  );
-  const data = await res.json();
-  return data;
-}
-
-// Example usage
-searchWeb('space exploration discoveries', 3).then(data => {
-  console.log(`Fetched in ${data.latency_ms}ms:`, data.results);
-});
-```
-
----
-
-## 💬 Part 3: OpenAI-Compatible LLM Chat API
-
-The `/v1/chat/completions` endpoint is a drop-in replacement for OpenAI API. It routes directly to your **2x Tesla T4 Kaggle GPU instances** with auto load balancing.
-
-- **Base URL**: `https://zero-labs-gpu-server.vercel.app/v1`
+- **Base URL**: `https://api.zerolabs.live/v1`
 - **Endpoint**: `POST /v1/chat/completions` (or `/api/v1/chat/completions`)
-- **Header**: `Authorization: Bearer zerotech13287`
+- **Header**: `Authorization: Bearer $ZERO_API_KEY`
 
 ---
 
-### 3.1 Python Integration using Official `openai` Library
+### 2.1 Python Integration using Official `openai` Library
 
 Install the official OpenAI package:
 ```bash
@@ -170,19 +72,20 @@ pip install openai
 Run this code:
 ```python
 from openai import OpenAI
+import os
 
 # 1. Point client to Zero Labs gateway
 client = OpenAI(
-    base_url="https://zero-labs-gpu-server.vercel.app/v1",
-    api_key="zerotech13287"
+    base_url="https://api.zerolabs.live/v1",
+    api_key=os.environ.get("ZERO_API_KEY")
 )
 
 # -------------------------------------------------------------
-# Scenario A: Ultra-Fast Streaming Chat with Titan Pro 9B
+# Scenario A: Ultra-Fast Streaming Chat with Titan Pro
 # -------------------------------------------------------------
-print("=== TITAN PRO 9B STREAMING ===")
+print("=== TITAN PRO STREAMING ===")
 stream = client.chat.completions.create(
-    model="titan-pro", # or "pro"
+    model="titan-pro",
     messages=[
         {"role": "user", "content": "Explain microservices vs monolith architecture in 3 bullet points."}
     ],
@@ -198,11 +101,11 @@ for chunk in stream:
 print("\n\n" + "="*50 + "\n")
 
 # -------------------------------------------------------------
-# Scenario B: Deep Analytical Reasoning with Titan Ultra 27B
+# Scenario B: Deep Analytical Reasoning with Titan Ultra
 # -------------------------------------------------------------
-print("=== TITAN ULTRA 27B STREAMING ===")
+print("=== TITAN ULTRA STREAMING ===")
 stream_ultra = client.chat.completions.create(
-    model="titan-ultra", # or "ultra"
+    model="titan-ultra",
     messages=[
         {"role": "user", "content": "Solve: If a car travels at 60 mph for 2.5 hours, then 40 mph for 1.5 hours, what is its average speed?"}
     ],
@@ -218,7 +121,7 @@ for chunk in stream_ultra:
 
 ---
 
-### 3.2 JavaScript / TypeScript Integration using Official `openai` npm
+### 2.2 JavaScript / TypeScript Integration using Official `openai` npm
 
 Install the package:
 ```bash
@@ -229,18 +132,18 @@ npm install openai
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  baseURL: 'https://zero-labs-gpu-server.vercel.app/v1',
-  apiKey: 'zerotech13287',
+  baseURL: 'https://api.zerolabs.live/v1',
+  apiKey: process.env.ZERO_API_KEY,
 });
 
 async function run() {
   const stream = await client.chat.completions.create({
-    model: 'titan-pro', // or 'titan-ultra', 'search-pro', 'search-ultra'
+    model: 'titan-pro', // or 'titan-ultra'
     messages: [
       { role: 'user', content: 'Write a TypeScript function to debounce an async API call.' }
     ],
-    temperature: 0.7,
-    max_tokens: 512,
+    temperature=0.7,
+    max_tokens=512,
     stream: true,
   });
 
@@ -254,11 +157,11 @@ run().catch(console.error);
 
 ---
 
-### 3.3 Raw cURL Request (Streaming SSE)
+### 2.3 Raw cURL Request (Streaming SSE)
 ```bash
-curl -N -X POST https://zero-labs-gpu-server.vercel.app/api/v1/chat/completions \
+curl -N -X POST https://api.zerolabs.live/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer zerotech13287" \
+  -H "Authorization: Bearer $ZERO_API_KEY" \
   -d '{
     "model": "titan-pro",
     "messages": [
@@ -272,43 +175,10 @@ curl -N -X POST https://zero-labs-gpu-server.vercel.app/api/v1/chat/completions 
 
 ---
 
-## 🌐 Part 4: Real-Time Web Search Augmentation (RAG)
-
-You can activate live web search directly in your completions in two ways:
-
-### Option 1: Use Search Models (Zero Configuration)
-Simply specify `model: "search-pro"` or `model: "search-ultra"`:
-```python
-response = client.chat.completions.create(
-    model="search-pro",
-    messages=[
-        {"role": "user", "content": "What were today's major technology news headlines?"}
-    ],
-    stream=True
-)
-for chunk in response:
-    print(chunk.choices[0].delta.content or "", end="", flush=True)
-```
-
-### Option 2: Pass `web_search: true` with any Model
-```python
-response = client.chat.completions.create(
-    model="titan-ultra",
-    messages=[
-        {"role": "user", "content": "What is the latest score in the Champions League?"}
-    ],
-    extra_body={"web_search": True},
-    stream=True
-)
-```
-
----
-
-## ⚙️ Part 5: Error Codes & Handling
+## ⚙️ Part 3: Error Codes & Handling
 
 | Status Code | Meaning | Resolution |
 | :--- | :--- | :--- |
 | **`200 OK`** | Success | Response returned / streaming active |
-| **`401 Unauthorized`** | Invalid API Key | Ensure `Authorization: Bearer zerotech13287` is passed |
-| **`503 Service Unavailable`** | No GPU Online | The Kaggle GPU node is sleeping/offline. Open [https://zero-labs-gpu-server.vercel.app](https://zero-labs-gpu-server.vercel.app) and click **"Start GPU Node"**. It turns live in ~3 minutes |
-| **`502 Bad Gateway`** | Tunnel Warming | The GPU tunnel is establishing connection; retry in 5–10 seconds |
+| **`401 Unauthorized`** | Invalid API Key | Ensure `Authorization: Bearer $ZERO_API_KEY` header is passed |
+| **`503 Service Unavailable`** | Service Temporarily Unavailable | The AI inference cluster is updating or initializing. Retry in 5–10 seconds |

@@ -33,15 +33,15 @@ export default function DocsPage() {
 
   const jsQuickstart = `import OpenAI from 'openai';
 
-// 1. Initialize OpenAI client with Zero GPU gateway
+// Initialize OpenAI client with Zero Labs API Gateway
 const client = new OpenAI({
-  baseURL: 'https://zero-labs-gpu-server.vercel.app/v1',
-  apiKey: process.env.ZERO_API_KEY || 'zerotech13287',
+  baseURL: 'https://api.zerolabs.live/v1',
+  apiKey: process.env.ZERO_API_KEY,
 });
 
 async function main() {
   const stream = await client.chat.completions.create({
-    model: 'titan-pro', // or 'titan-ultra', 'search-pro', 'search-ultra'
+    model: 'titan-pro', // or 'titan-ultra'
     messages: [
       { role: 'user', content: 'Explain neural networks in 3 bullet points.' }
     ],
@@ -58,15 +58,15 @@ main();`
   const pythonQuickstart = `from openai import OpenAI
 import os
 
-# 1. Point standard OpenAI client to Zero GPU gateway
+# Point standard OpenAI client to Zero Labs API Gateway
 client = OpenAI(
-    base_url="https://zero-labs-gpu-server.vercel.app/v1",
-    api_key=os.environ.get("ZERO_API_KEY", "zerotech13287")
+    base_url="https://api.zerolabs.live/v1",
+    api_key=os.environ.get("ZERO_API_KEY")
 )
 
-# 2. Stream completions directly from dual Tesla T4 Kaggle GPUs
+# Stream completions directly from Zero Titan models
 response = client.chat.completions.create(
-    model="titan-pro", # or "titan-ultra", "search-pro", "search-ultra"
+    model="titan-pro", # or "titan-ultra"
     messages=[
         {"role": "user", "content": "Explain neural networks in 3 bullet points."}
     ],
@@ -76,8 +76,8 @@ response = client.chat.completions.create(
 for chunk in response:
     print(chunk.choices[0].delta.content or "", end="", flush=True)`
 
-  const curlQuickstart = `curl https://zero-labs-gpu-server.vercel.app/v1/chat/completions \\
-  -H "Authorization: Bearer zerotech13287" \\
+  const curlQuickstart = `curl https://api.zerolabs.live/v1/chat/completions \\
+  -H "Authorization: Bearer $ZERO_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "model": "titan-pro",
@@ -266,7 +266,7 @@ for chunk in response:
                     <td className="p-3.5 font-bold text-[#0A0A0A]">model</td>
                     <td className="p-3.5 text-[#00C8FF] font-bold">string</td>
                     <td className="p-3.5 text-rose-600 font-bold">Yes</td>
-                    <td className="p-3.5 font-sans">"titan-20b" (Flash) or "titan-90b" (Pro)</td>
+                    <td className="p-3.5 font-sans">"titan-pro" or "titan-ultra"</td>
                   </tr>
                   <tr>
                     <td className="p-3.5 font-bold text-[#0A0A0A]">messages</td>
