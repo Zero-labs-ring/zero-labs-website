@@ -8,6 +8,8 @@ export interface ModelComparisonRow {
   provider: string;
   badge?: string;
   brand: 'titan' | 'anthropic' | 'openai' | 'deepseek' | 'google' | 'moonshot' | 'xai';
+  sweBenchVerified: number | null;
+  terminalBench: number | null;
   gpqaDiamond: number;
   math500: number;
   liveCodeBench: number;
@@ -22,6 +24,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Zero Labs',
     badge: 'Flagship Reasoning',
     brand: 'titan',
+    sweBenchVerified: 82.4,
+    terminalBench: 61.4,
     gpqaDiamond: 83.8,
     math500: 93.2,
     liveCodeBench: 86.2,
@@ -34,6 +38,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Zero Labs',
     badge: 'Fast Agentic Engine',
     brand: 'titan',
+    sweBenchVerified: 73.1,
+    terminalBench: 49.8,
     gpqaDiamond: 73.9,
     math500: 83.8,
     liveCodeBench: 72.9,
@@ -46,6 +52,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Anthropic',
     badge: 'Frontier (Feb 2026)',
     brand: 'anthropic',
+    sweBenchVerified: 80.84,
+    terminalBench: 65.4,
     gpqaDiamond: 91.3,
     math500: 95.0,
     liveCodeBench: 91.2,
@@ -57,6 +65,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Google DeepMind',
     badge: 'Frontier (Feb 2026)',
     brand: 'google',
+    sweBenchVerified: 80.6,
+    terminalBench: 68.5,
     gpqaDiamond: 94.3,
     math500: 97.9,
     liveCodeBench: 89.4,
@@ -68,6 +78,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'OpenAI',
     badge: 'Agentic SOTA (Apr 2026)',
     brand: 'openai',
+    sweBenchVerified: 58.6,
+    terminalBench: 82.7,
     gpqaDiamond: 93.6,
     math500: 96.4,
     liveCodeBench: 88.7,
@@ -79,6 +91,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'OpenAI',
     badge: 'Frontier (Aug 2025)',
     brand: 'openai',
+    sweBenchVerified: 74.9,
+    terminalBench: 35.2,
     gpqaDiamond: 88.4,
     math500: 94.6,
     liveCodeBench: 84.8,
@@ -90,6 +104,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Anthropic',
     badge: 'Production (2026)',
     brand: 'anthropic',
+    sweBenchVerified: 74.6,
+    terminalBench: 51.0,
     gpqaDiamond: 86.2,
     math500: 94.1,
     liveCodeBench: 86.5,
@@ -101,6 +117,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Anthropic',
     badge: 'Frontier (Sep 2025)',
     brand: 'anthropic',
+    sweBenchVerified: 77.2,
+    terminalBench: null,
     gpqaDiamond: 83.4,
     math500: 87.0,
     liveCodeBench: 82.1,
@@ -112,6 +130,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'Google DeepMind',
     badge: 'High Speed (Nov 2025)',
     brand: 'google',
+    sweBenchVerified: 78.0,
+    terminalBench: null,
     gpqaDiamond: 90.4,
     math500: 91.5,
     liveCodeBench: 78.4,
@@ -123,6 +143,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'DeepSeek',
     badge: 'Open Weights (Apr 2026)',
     brand: 'deepseek',
+    sweBenchVerified: 80.6,
+    terminalBench: 67.9,
     gpqaDiamond: 90.1,
     math500: 95.0,
     liveCodeBench: 93.5,
@@ -134,6 +156,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'DeepSeek',
     badge: 'Open Weights (Dec 2025)',
     brand: 'deepseek',
+    sweBenchVerified: 73.1,
+    terminalBench: 46.4,
     gpqaDiamond: 82.4,
     math500: 93.1,
     liveCodeBench: 83.3,
@@ -145,6 +169,8 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     provider: 'DeepSeek',
     badge: 'Open Reasoning (Jan 2025)',
     brand: 'deepseek',
+    sweBenchVerified: null,
+    terminalBench: null,
     gpqaDiamond: 71.5,
     math500: 86.7,
     liveCodeBench: 72.8,
@@ -173,6 +199,14 @@ export function BenchmarkTable() {
           <thead>
             <tr className="border-b border-slate-200 text-slate-500 font-mono uppercase tracking-wider text-[11px] bg-slate-100/70">
               <th className="py-3.5 px-4 min-w-[210px]">Model & Provider</th>
+              <th className="py-3.5 px-3 min-w-[130px]">
+                <div>SWE-bench</div>
+                <div className="text-[9px] text-slate-400 font-sans lowercase">verified (%)</div>
+              </th>
+              <th className="py-3.5 px-3 min-w-[130px]">
+                <div>Terminal-Bench</div>
+                <div className="text-[9px] text-slate-400 font-sans lowercase">agentic cli (%)</div>
+              </th>
               <th className="py-3.5 px-3 min-w-[120px]">
                 <div>GPQA Diamond</div>
                 <div className="text-[9px] text-slate-400 font-sans lowercase">phd science (%)</div>
@@ -227,6 +261,12 @@ export function BenchmarkTable() {
                       <div className="text-[10px] text-slate-500 font-mono">{row.provider}</div>
                     </div>
                   </div>
+                </td>
+                <td className="py-3.5 px-3 text-slate-900 font-semibold">
+                  {row.sweBenchVerified !== null ? `${row.sweBenchVerified.toFixed(1)}%` : <span className="text-slate-400 font-normal">—</span>}
+                </td>
+                <td className="py-3.5 px-3 text-slate-900 font-semibold">
+                  {row.terminalBench !== null ? `${row.terminalBench.toFixed(1)}%` : <span className="text-slate-400 font-normal">—</span>}
                 </td>
                 <td className="py-3.5 px-3 text-slate-900 font-semibold">
                   {row.gpqaDiamond.toFixed(1)}%
