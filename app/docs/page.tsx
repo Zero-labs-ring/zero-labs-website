@@ -297,24 +297,24 @@ for chunk in response:
             <div className="grid sm:grid-cols-2 gap-5">
               <div className="p-6 rounded-2xl bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0_#00C8FF] space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-[#0A0A0A] text-lg">Zero Titan 20B (Flash)</h3>
+                  <h3 className="font-extrabold text-[#0A0A0A] text-lg">Titan Pro (Thinking)</h3>
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#E8F8FF] text-[#00C8FF] border border-[#00C8FF]">FAST</span>
                 </div>
                 <p className="text-xs text-[#555550]">Low-latency agentic inference, RAG embeddings, and rapid conversational UI.</p>
                 <div className="font-mono text-xs text-[#0A0A0A] font-bold pt-2 space-y-1">
-                  <p>Context: 118,000 tokens</p>
+                  <p>Context: 128,000 tokens</p>
                   <p>Latency: &lt;500ms P50</p>
                 </div>
               </div>
 
               <div className="p-6 rounded-2xl bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0_#0A0A0A] space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-[#0A0A0A] text-lg">Zero Titan 90B (Pro)</h3>
+                  <h3 className="font-extrabold text-[#0A0A0A] text-lg">Titan Ultra (Thinking)</h3>
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#F3E8FF] text-[#9333EA] border border-[#9333EA]">PRO</span>
                 </div>
                 <p className="text-xs text-[#555550]">Frontier multi-step reasoning, mathematical proof, code synthesis, and deep logic.</p>
                 <div className="font-mono text-xs text-[#0A0A0A] font-bold pt-2 space-y-1">
-                  <p>Context: 118,000 tokens</p>
+                  <p>Context: 128,000 tokens</p>
                   <p>Self-Verification CoT Engine</p>
                 </div>
               </div>

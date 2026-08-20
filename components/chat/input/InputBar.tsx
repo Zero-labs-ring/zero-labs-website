@@ -222,14 +222,34 @@ export function InputBar({ onSend, onStop, isTyping, collapsed = false, onExpand
                 <Mic className="w-4 h-4" />
               </button>
 
-              <button
-                type="button"
-                onClick={handleExpand}
-                className="p-1.5 text-[#111]/40 hover:text-[#111] hover:bg-[#F0F0F0] rounded-full transition-all"
-                title="Open chat input"
-              >
-                <ArrowUp className="w-4 h-4" />
-              </button>
+              {isTyping ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onStop?.();
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onStop?.();
+                  }}
+                  className="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-[#DC2626] active:bg-[#B91C1C] text-white flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] transition-colors cursor-pointer border border-red-400/50 shrink-0"
+                  title="Stop generating"
+                >
+                  <Square className="w-3 h-3 fill-current text-white" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleExpand}
+                  className="p-1.5 text-[#111]/40 hover:text-[#111] hover:bg-[#F0F0F0] rounded-full transition-all"
+                  title="Open chat input"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         ) : (

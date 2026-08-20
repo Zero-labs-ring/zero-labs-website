@@ -130,7 +130,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
         <div className={`min-h-full flex flex-col ${messages.length === 0 ? 'justify-end' : 'justify-start'}`}>
           {isLoadingSession ? (
             /* ── Skeleton loader for smooth chat transitions ── */
-            <div className="max-w-4xl xl:max-w-5xl 2xl:max-w-6xl w-full mx-auto px-4 sm:px-8 md:px-12 pt-16 pb-36 flex flex-col gap-6 animate-pulse">
+            <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-[1350px] w-full mx-auto px-4 sm:px-8 md:px-12 pt-16 pb-36 flex flex-col gap-6 animate-pulse">
               <div className="flex justify-end">
                 <div className="w-48 h-10 bg-black/5 rounded-2xl" />
               </div>
@@ -151,7 +151,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
               <InputBar onSend={sendMessage} onStop={stop} isTyping={isTyping} />
             </WelcomeScreen>
           ) : (
-            <div className="max-w-4xl xl:max-w-5xl 2xl:max-w-6xl w-full mx-auto px-4 sm:px-8 md:px-12 pt-12 pb-36 flex flex-col">
+            <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-[1350px] w-full mx-auto px-4 sm:px-8 md:px-12 pt-12 pb-36 flex flex-col">
               <AnimatePresence>
                 {(() => {
                   const visibleMessages = (messages || []).filter(
@@ -269,7 +269,7 @@ export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatS
       {/* Floating glass bottom composer */}
       {messages.length > 0 && (
         <div id="composer" className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none pb-4 pt-3 bg-gradient-to-t from-[#F8F7F3]/50 via-[#F8F7F3]/20 to-transparent">
-          <div className="max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-8 md:px-12 pointer-events-auto">
+          <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-[1350px] mx-auto px-4 sm:px-8 md:px-12 pointer-events-auto">
             <InputBar
               onSend={sendMessage}
               onStop={stop}

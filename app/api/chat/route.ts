@@ -70,7 +70,7 @@ async function callZeroGpu(
                 model,
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
-                max_tokens: maxTokens || (isUltra ? 118000 : 118000),
+                max_tokens: maxTokens || (isUltra ? 128000 : 128000),
                 stream: true,
                 ...(webSearch ? { extra_body: { web_search: true } } : {}),
             }),
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
                     }
 
                     // Connect to Zero GPU cluster
-                    const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 118000 : 118000);
+                    const effectiveMaxTokens = max_tokens || maxTokens || (isUltra ? 128000 : 128000);
                     const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
                     if (!upstream || !upstream.ok) {
@@ -245,7 +245,14 @@ export async function POST(req: NextRequest) {
 
                             try {
                                 const parsed = JSON.parse(raw);
-                                const token = parsed.choices?.[0]?.delta?.content ?? '';
+                                const token = 
+                                    parsed.choices?.[0]?.delta?.content ?? 
+                                    parsed.choices?.[0]?.delta?.reasoning_content ?? 
+                                    parsed.choices?.[0]?.delta?.thought ?? 
+                                    parsed.choices?.[0]?.text ?? 
+                                    parsed.text ?? 
+                                    parsed.content ?? 
+                                    '';
                                 if (token) {
                                     enqueue(JSON.stringify({ type: 'token', token }));
                                 }

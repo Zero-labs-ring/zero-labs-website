@@ -324,6 +324,13 @@ export function useChat(options?: UseChatOptions) {
                         if (event.type === 'tool_result') {
                             setSearchStatus('⚡ Search synthesized, streaming GPU response…');
                         }
+                        if (event.type === 'error') {
+                            accumulated = `⚠️ ${event.error || 'GPU inference cluster error'}`;
+                            pendingText = accumulated;
+                            if (!rafId) {
+                                rafId = requestAnimationFrame(flushStreamUpdate);
+                            }
+                        }
                         if (event.type === 'token') {
                             accumulated += event.token;
                             const { text, artifacts, activeSkill: detectedSkill } = parseArtifacts(accumulated, false);

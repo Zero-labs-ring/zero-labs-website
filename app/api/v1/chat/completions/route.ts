@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     const forwardedBody = {
       ...body,
       model: internalModel,
+      max_tokens: body.max_tokens || body.maxTokens || 128000,
     };
 
     // 5. Forward request to internal backend URL

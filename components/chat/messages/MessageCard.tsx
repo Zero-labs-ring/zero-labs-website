@@ -41,7 +41,7 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
       style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
     >
       {isAssistant ? (
-        <div className="flex flex-col w-full max-w-full">
+        <div className="flex flex-col w-full max-w-full min-w-0">
           {/* Assistant Header Badge */}
           <div className="flex items-center gap-2 mb-2.5">
             {isStreaming ? (
@@ -98,8 +98,8 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
           </div>
 
           {/* Full-width seamless response text, formulas, and code blocks */}
-          <div className="w-full text-[#111111] leading-relaxed text-[15px] sm:text-[15.5px] tracking-tight">
-            <div className="prose prose-base max-w-none text-[#111111] leading-relaxed">
+          <div className="w-full text-[#111111] leading-relaxed text-[15px] sm:text-[15.5px] tracking-tight min-w-0">
+            <div className="prose prose-base max-w-none text-[#111111] leading-relaxed min-w-0 overflow-hidden">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
@@ -181,7 +181,7 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
                     const match = /language-(\w+)/.exec(className || '');
                     const codeString = String(children).replace(/\n$/, '');
 
-                    if (!inline && (match || codeString.includes('\n'))) {
+                    if (!inline) {
                       return (
                         <CodeBlock
                           language={match ? match[1] : ''}
@@ -192,7 +192,7 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
 
                     return (
                       <code
-                        className="bg-[#EFECE6] text-[#C93B3B] px-1.5 py-0.5 rounded-md font-mono text-[13px] font-semibold tracking-tight"
+                        className="bg-[#EFECE6] text-[#C93B3B] px-1.5 py-0.5 rounded-md font-mono text-[13px] font-semibold tracking-tight break-all"
                         {...props}
                       >
                         {children}
@@ -200,7 +200,7 @@ export function MessageCard({ message, isStreaming = false, onArtifactView }: Me
                     );
                   },
                   pre({ children }) {
-                    return <div className="not-prose w-full max-w-full my-3">{children}</div>;
+                    return <div className="not-prose w-full max-w-full min-w-0 my-3 overflow-x-auto">{children}</div>;
                   },
                 }}
               >

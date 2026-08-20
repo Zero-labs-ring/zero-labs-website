@@ -41,7 +41,7 @@ export function WelcomeScreen({ children, mascotRef }: WelcomeScreenProps) {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center text-center w-full max-w-3xl"
+        className="flex flex-col items-center text-center w-full max-w-4xl sm:max-w-5xl"
       >
         {/* Greeting row */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-3.5 md:gap-6 mb-8 md:mb-12">
