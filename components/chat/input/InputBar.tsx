@@ -94,7 +94,7 @@ export function InputBar({ onSend, onStop, isTyping, collapsed = false, onExpand
       onStop?.()
       return
     }
-    const text = committed.trim() || interim.trim()
+    const text = displayValue.trim()
     if (!text) return
     // Stop STT if active
     if (isRecording) stopRecording()

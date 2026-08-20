@@ -300,7 +300,27 @@ export function useChat(options?: UseChatOptions) {
                 }
 
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                    if (buffer.trim()) {
+                        const line = buffer.trim();
+                        if (line.startsWith('data:')) {
+                            const raw = line.slice(5).trim();
+                            if (raw !== '[DONE]') {
+                                try {
+                                    const event = JSON.parse(raw);
+                                    if (event.type === 'token' && event.token) {
+                                        accumulated += event.token;
+                                        const { text, artifacts, activeSkill: detectedSkill } = parseArtifacts(accumulated, false);
+                                        if (detectedSkill) setActiveSkill(detectedSkill);
+                                        pendingText = text;
+                                        pendingArtifacts = artifacts;
+                                    }
+                                } catch {}
+                            }
+                        }
+                    }
+                    break;
+                }
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');

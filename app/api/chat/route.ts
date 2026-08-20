@@ -226,7 +226,31 @@ export async function POST(req: NextRequest) {
                         }
 
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        if (done) {
+                            if (buffer.trim()) {
+                                const line = buffer.trim();
+                                if (line.startsWith('data:')) {
+                                    const raw = line.slice(5).trim();
+                                    if (raw !== '[DONE]') {
+                                        try {
+                                            const parsed = JSON.parse(raw);
+                                            const token = 
+                                                parsed.choices?.[0]?.delta?.content ?? 
+                                                parsed.choices?.[0]?.delta?.reasoning_content ?? 
+                                                parsed.choices?.[0]?.delta?.thought ?? 
+                                                parsed.choices?.[0]?.text ?? 
+                                                parsed.text ?? 
+                                                parsed.content ?? 
+                                                '';
+                                            if (token) {
+                                                enqueue(JSON.stringify({ type: 'token', token }));
+                                            }
+                                        } catch { }
+                                    }
+                                }
+                            }
+                            break;
+                        }
 
                         buffer += decoder.decode(value, { stream: true });
                         const lines = buffer.split('\n');

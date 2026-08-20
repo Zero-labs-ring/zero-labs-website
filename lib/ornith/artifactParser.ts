@@ -21,24 +21,17 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     let text = raw;
     let activeSkill: string | null = null;
 
-    // 1. Strip closed reasoning blocks (<think>...</think>, <thought>...</thought>, <reasoning>...</reasoning>)
-    if (text.includes('</think>')) {
-        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    } else if (text.includes('<think>')) {
-        text = text.replace(/<think>/gi, '').trim();
-    }
+    // 1. Strip reasoning blocks (<think>...</think>, <thought>...</thought>, <reasoning>...</reasoning>)
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    text = text.replace(/<think>[\s\S]*$/gi, '');
 
-    if (text.includes('</thought>')) {
-        text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '').trim();
-    } else if (text.includes('<thought>')) {
-        text = text.replace(/<thought>/gi, '').trim();
-    }
+    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    text = text.replace(/<thought>[\s\S]*$/gi, '');
 
-    if (text.includes('</reasoning>')) {
-        text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
-    } else if (text.includes('<reasoning>')) {
-        text = text.replace(/<reasoning>/gi, '').trim();
-    }
+    text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+    text = text.replace(/<reasoning>[\s\S]*$/gi, '');
+
+    text = text.trim();
 
     // 1b. Strip leading model thinking headers like "Titan Pro Thinking", "Thinking with...", "Thinking:"
     text = text.replace(/^(?:Titan (?:Pro|Ultra)(?: Thinking)?\s*|\*?Thinking(?: with [^\n]+)?:?\*?\s*)+/gi, '').trim();
