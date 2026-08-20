@@ -300,6 +300,73 @@ export async function POST(req: NextRequest) {
                         let turnAccumulated = '';
                         let streamFinished = false;
 
+                        // Helper: extract all complete JSON objects from a buffer that may have
+                        // split data: lines across TCP packets (GPU sends fragmented chunks).
+                        // Returns { tokens: string[], remaining: string, done: boolean }
+                        const extractTokens = (buf: string): { tokens: string[]; remaining: string; done: boolean } => {
+                            const tokens: string[] = [];
+                            let done = false;
+                            let i = 0;
+
+                            while (i < buf.length) {
+                                // Find next 'data:' prefix
+                                const dataIdx = buf.indexOf('data:', i);
+                                if (dataIdx === -1) break;
+
+                                // Check for [DONE]
+                                const afterData = buf.slice(dataIdx + 5).trimStart();
+                                if (afterData.startsWith('[DONE]')) {
+                                    done = true;
+                                    i = dataIdx + 5 + afterData.indexOf('[DONE]') + 6;
+                                    break;
+                                }
+
+                                // Find the start of the JSON object
+                                const braceStart = buf.indexOf('{', dataIdx + 5);
+                                if (braceStart === -1) break;
+
+                                // Walk forward counting braces to find the end of the JSON object
+                                let depth = 0;
+                                let inString = false;
+                                let escape = false;
+                                let j = braceStart;
+
+                                for (; j < buf.length; j++) {
+                                    const ch = buf[j];
+                                    if (escape) { escape = false; continue; }
+                                    if (ch === '\\' && inString) { escape = true; continue; }
+                                    if (ch === '"') { inString = !inString; continue; }
+                                    if (inString) continue;
+                                    if (ch === '{') depth++;
+                                    else if (ch === '}') {
+                                        depth--;
+                                        if (depth === 0) { j++; break; }
+                                    }
+                                }
+
+                                if (depth !== 0) {
+                                    // Incomplete JSON — need more data, stop here
+                                    break;
+                                }
+
+                                const jsonStr = buf.slice(braceStart, j);
+                                i = j;
+
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    const token =
+                                        parsed.choices?.[0]?.delta?.content ??
+                                        parsed.choices?.[0]?.delta?.text ??
+                                        parsed.text ??
+                                        parsed.content ??
+                                        '';
+                                    if (token) tokens.push(token);
+                                } catch { }
+                            }
+
+                            return { tokens, remaining: buf.slice(i), done };
+                        };
+
                         while (!streamFinished) {
                             if (req.signal.aborted) {
                                 try { await reader.cancel(); } catch { }
@@ -308,59 +375,28 @@ export async function POST(req: NextRequest) {
 
                             const { done, value } = await reader.read();
                             if (done) {
+                                // Drain remaining buffer
                                 if (buffer.trim()) {
-                                    const trailingLines = buffer.split(/\r?\n/);
-                                    for (const line of trailingLines) {
-                                        if (!line.startsWith('data:')) continue;
-                                        const raw = line.slice(5).trim();
-                                        if (raw === '[DONE]') { streamFinished = true; break; }
-                                        try {
-                                            const parsed = JSON.parse(raw);
-                                            const token = 
-                                                parsed.choices?.[0]?.delta?.content ?? 
-                                                parsed.choices?.[0]?.delta?.text ?? 
-                                                parsed.text ?? 
-                                                parsed.content ?? 
-                                                '';
-                                            if (token) {
-                                                turnAccumulated += token;
-                                                enqueue(JSON.stringify({ type: 'token', token }));
-                                            }
-                                        } catch { }
+                                    const { tokens, done: isDone } = extractTokens(buffer);
+                                    for (const token of tokens) {
+                                        turnAccumulated += token;
+                                        enqueue(JSON.stringify({ type: 'token', token }));
                                     }
+                                    if (isDone) streamFinished = true;
                                 }
                                 break;
                             }
 
                             buffer += decoder.decode(value, { stream: true });
-                            const lines = buffer.split(/\r?\n/);
-                            buffer = lines.pop() ?? '';
+                            const { tokens, remaining, done: isDone } = extractTokens(buffer);
+                            buffer = remaining;
 
-                            for (const line of lines) {
-                                if (!line.startsWith('data:')) continue;
-                                const raw = line.slice(5).trim();
-
-                                if (raw === '[DONE]') {
-                                    streamFinished = true;
-                                    break;
-                                }
-
-                                try {
-                                    const parsed = JSON.parse(raw);
-                                    const token = 
-                                        parsed.choices?.[0]?.delta?.content ?? 
-                                        parsed.choices?.[0]?.delta?.text ?? 
-                                        parsed.text ?? 
-                                        parsed.content ?? 
-                                        '';
-                                    if (token) {
-                                        turnAccumulated += token;
-                                        enqueue(JSON.stringify({ type: 'token', token }));
-                                    }
-                                } catch {
-                                    // Skip non-JSON chunks
-                                }
+                            for (const token of tokens) {
+                                turnAccumulated += token;
+                                enqueue(JSON.stringify({ type: 'token', token }));
                             }
+
+                            if (isDone) streamFinished = true;
                         }
 
                         totalAccumulated += turnAccumulated;
