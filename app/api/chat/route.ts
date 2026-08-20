@@ -60,12 +60,7 @@ function calculateDynamicMaxTokens(
         return Math.min(Math.max(requestedMaxTokens, 512), 131072);
     }
 
-    const text = promptText.toLowerCase();
-    const isCodeOrComplexTask =
-        /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table|write|build|create|fix|debug|refactor|error|bug|sql|query|api|backend|class|struct|method|c\+\+|cpp|python|java|rust|typescript|javascript|html|css/i.test(text) ||
-        promptText.length > 150;
-
-    return isCodeOrComplexTask ? 131072 : 65536;
+    return 131072;
 }
 
 // Intelligently prune and compress older conversation history so input prompt stays compact
@@ -277,7 +272,7 @@ export async function POST(req: NextRequest) {
                     let currentMessages = [...searchInjectedMessages];
                     let totalAccumulated = '';
                     let turn = 0;
-                    const maxAutoTurns = 3;
+                    const maxAutoTurns = 5;
 
                     while (turn < maxAutoTurns && !req.signal.aborted) {
                         turn++;
@@ -374,7 +369,7 @@ export async function POST(req: NextRequest) {
                         currentMessages = [
                             ...searchInjectedMessages,
                             { role: 'assistant', content: totalAccumulated },
-                            { role: 'user', content: `Continue writing the exact code directly from this cutoff point:\n\`\`\`\n${lastLines}\n\`\`\`\nDo not repeat code. Output the rest of the code until completely finished.` }
+                            { role: 'user', content: `Continue writing the exact code directly from this cutoff point:\n\`\`\`\n${lastLines}\n\`\`\`\nDo not repeat code. Complete all remaining functions and output the rest of the code until completely finished.` }
                         ];
                     }
                 } catch (err: any) {
