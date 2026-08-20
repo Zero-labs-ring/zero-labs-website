@@ -18,7 +18,7 @@ export interface ModelComparisonRow {
 
 export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
   {
-    model: 'Titan Ultra Thinking (27B)',
+    model: 'Titan Ultra Thinking',
     provider: 'Zero Labs',
     badge: 'Flagship Reasoning',
     brand: 'titan',
@@ -30,7 +30,7 @@ export const REAL_MODEL_COMPARISON: ModelComparisonRow[] = [
     isTitan: true,
   },
   {
-    model: 'Titan Pro Thinking (9B)',
+    model: 'Titan Pro Thinking',
     provider: 'Zero Labs',
     badge: 'Fast Agentic Engine',
     brand: 'titan',
@@ -199,13 +199,12 @@ export function BenchmarkTable() {
             {REAL_MODEL_COMPARISON.map((row) => (
               <tr
                 key={row.model}
-                className={`transition-colors ${
-                  row.isTitan
-                    ? row.model.includes('Pro')
-                      ? 'bg-[#00C8FF]/10 font-bold border-l-4 border-l-[#00C8FF]'
-                      : 'bg-amber-500/10 font-bold border-l-4 border-l-amber-500'
-                    : 'hover:bg-slate-100/80'
-                }`}
+                className={`transition-colors ${row.isTitan
+                  ? row.model.includes('Pro')
+                    ? 'bg-[#00C8FF]/10 font-bold border-l-4 border-l-[#00C8FF]'
+                    : 'bg-amber-500/10 font-bold border-l-4 border-l-amber-500'
+                  : 'hover:bg-slate-100/80'
+                  }`}
               >
                 <td className="py-3.5 px-4 font-sans">
                   <div className="flex items-center gap-2">
