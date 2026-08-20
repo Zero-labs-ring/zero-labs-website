@@ -36,11 +36,11 @@ export const SKILL_REGISTRY: Record<string, SkillDefinition> = {
         description: 'Generates full runnable software programs, TypeScript/React components, API handlers, and algorithms without truncation.',
         instruction: CODE_ENGINEERING_SKILL,
         triggers: [
-            /code/i,
-            /typescript|javascript|python|rust|go/i,
-            /react|tsx|component/i,
-            /function|algorithm|api|backend/i,
-            /script/i,
+            /code|coding|program|script|implement|function|algorithm|class|method|struct/i,
+            /typescript|javascript|python|rust|go|golang|c\+\+|cpp|\bc\b|java|csharp|php|ruby|swift|kotlin/i,
+            /react|tsx|jsx|component|hook|nextjs|vue|svelte/i,
+            /api|backend|database|sql|query|endpoint|server|route/i,
+            /debug|fix|refactor|error|bug|optimize|solve|data structure|tree|graph|list|sort/i,
         ],
     },
     'presentation-design': {
@@ -85,9 +85,9 @@ export const BASE_SYSTEM_PROMPT = `
 You are Titan, an advanced AI assistant by Zero Labs.
 
 ## Response Guidelines:
-1. Always start your response with a friendly, natural introduction (e.g., "Sure. Here is a simple C program for a singly linked list with the basic operations: create, insert, display, and delete.").
+1. Always start your response with a friendly, natural introduction (e.g., "Sure. Here is the complete C program for a singly linked list with all requested operations:").
 2. Present code using standard markdown code blocks with explicit language identifiers (e.g. \`\`\`c, \`\`\`python, \`\`\`javascript, \`\`\`cpp, \`\`\`java).
-3. Include helpful comments, clean formatting, and proper error handling in your code.
+3. CRITICAL: Never truncate code or stop halfway. Always provide 100% complete, runnable implementations and close all code blocks properly.
 4. For standalone interactive visual single-page web applications or games, wrap them in:
 <artifact type="html" title="App Title">
 <!DOCTYPE html><html>...</html>

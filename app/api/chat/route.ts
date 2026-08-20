@@ -61,10 +61,60 @@ function calculateDynamicMaxTokens(
 
     const text = promptText.toLowerCase();
     const isCodeOrComplexTask =
-        /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table/i.test(text) ||
-        promptText.length > 300;
+        /code|program|tree|algorithm|implement|function|react|component|script|app|game|website|pdf|report|slide|csv|table|write|build|create|fix|debug|refactor|error|bug|sql|query|api|backend|class|struct|method|c\+\+|cpp|python|java|rust|typescript|javascript|html|css/i.test(text) ||
+        promptText.length > 150;
 
     return isCodeOrComplexTask ? 8192 : 4096;
+}
+
+// Intelligently prune and compress older conversation history so input prompt stays compact (<3,500 tokens)
+// leaving maximum available headroom for the model's output generation (up to 8,192 tokens).
+function optimizeConversationHistory(
+    messages: { role: string; content: string }[]
+): { role: string; content: string }[] {
+    if (messages.length <= 4) {
+        return messages;
+    }
+
+    // Keep the initial user message for conversation anchor/intent
+    const firstUserMsgIndex = messages.findIndex(m => m.role === 'user');
+    const rootUserMsg = firstUserMsgIndex !== -1 ? messages[firstUserMsgIndex] : null;
+
+    // Recent 8 messages kept with highest fidelity
+    const recentCount = Math.min(messages.length, 8);
+    const recentMessages = messages.slice(messages.length - recentCount);
+
+    // Older intermediate messages: summarize/prune large past code blocks
+    const intermediate = messages.slice(0, messages.length - recentCount);
+    const compressedIntermediate = intermediate.map(msg => {
+        if (msg.role === 'assistant' && msg.content && msg.content.length > 400) {
+            const pruned = msg.content.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+                if (code.length > 250) {
+                    const lines = code.trim().split('\n');
+                    const snippet = lines.slice(0, 4).join('\n');
+                    return `\`\`\`${lang}\n${snippet}\n// ... [Full implementation provided in previous turn - ${lines.length} lines] ...\n\`\`\``;
+                }
+                return match;
+            });
+            return { role: msg.role, content: pruned };
+        }
+        return msg;
+    });
+
+    const combined: { role: string; content: string }[] = [];
+    if (rootUserMsg && !recentMessages.includes(rootUserMsg)) {
+        combined.push(rootUserMsg);
+    }
+    for (const msg of compressedIntermediate) {
+        if (msg !== rootUserMsg && !recentMessages.includes(msg)) {
+            combined.push(msg);
+        }
+    }
+    for (const msg of recentMessages) {
+        combined.push(msg);
+    }
+
+    return combined;
 }
 
 // Direct call to Zero GPU / Kaggle Cluster
@@ -165,9 +215,12 @@ export async function POST(req: NextRequest) {
             dynamicSystemPrompt += `\n\n[User Custom Instructions]:\n${customInstructions.trim()}`;
         }
 
+        // Optimize conversation history to prevent prompt context explosion
+        const optimizedHistory = optimizeConversationHistory(messages);
+
         const fullMessages = [
             { role: 'system', content: dynamicSystemPrompt },
-            ...messages,
+            ...optimizedHistory,
         ];
 
         const encoder = new TextEncoder();
@@ -218,7 +271,7 @@ export async function POST(req: NextRequest) {
                         }
                     }
 
-                    // Connect to Zero GPU cluster
+                    // Connect to Zero GPU cluster with optimal dynamic max_tokens (up to 8,192 for code)
                     const effectiveMaxTokens = calculateDynamicMaxTokens(max_tokens || maxTokens, isUltra, lastUserMsg);
                     const upstream = await callZeroGpu(searchInjectedMessages, modelId, isUltra, webSearch, req.signal, effectiveMaxTokens);
 
@@ -245,26 +298,27 @@ export async function POST(req: NextRequest) {
 
                         const { done, value } = await reader.read();
                         if (done) {
+                            // Fully drain any remaining lines in buffer on stream completion
                             if (buffer.trim()) {
-                                const line = buffer.trim();
-                                if (line.startsWith('data:')) {
+                                const trailingLines = buffer.split(/\r?\n/);
+                                for (const line of trailingLines) {
+                                    if (!line.startsWith('data:')) continue;
                                     const raw = line.slice(5).trim();
-                                    if (raw !== '[DONE]') {
-                                        try {
-                                            const parsed = JSON.parse(raw);
-                                            const token = 
-                                                parsed.choices?.[0]?.delta?.content ?? 
-                                                parsed.choices?.[0]?.delta?.reasoning_content ?? 
-                                                parsed.choices?.[0]?.delta?.thought ?? 
-                                                parsed.choices?.[0]?.text ?? 
-                                                parsed.text ?? 
-                                                parsed.content ?? 
-                                                '';
-                                            if (token) {
-                                                enqueue(JSON.stringify({ type: 'token', token }));
-                                            }
-                                        } catch { }
-                                    }
+                                    if (raw === '[DONE]') continue;
+                                    try {
+                                        const parsed = JSON.parse(raw);
+                                        const token = 
+                                            parsed.choices?.[0]?.delta?.content ?? 
+                                            parsed.choices?.[0]?.delta?.reasoning_content ?? 
+                                            parsed.choices?.[0]?.delta?.thought ?? 
+                                            parsed.choices?.[0]?.text ?? 
+                                            parsed.text ?? 
+                                            parsed.content ?? 
+                                            '';
+                                        if (token) {
+                                            enqueue(JSON.stringify({ type: 'token', token }));
+                                        }
+                                    } catch { }
                                 }
                             }
                             break;

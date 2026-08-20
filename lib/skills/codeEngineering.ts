@@ -1,28 +1,23 @@
 /**
  * Universal Code Engineering Skill Module
+ * Prioritizes 100% complete, runnable code with zero truncation and token efficiency.
  */
 export const CODE_ENGINEERING_SKILL = `
 ### 💻 Skill: Universal Code Engineering
 You are executing the **Code Engineering Skill**.
-When providing code, algorithms, data structures, or technical implementations:
-1. **Friendly Natural Introduction**: Start with a concise, helpful introduction summarizing the approach.
-2. **Complete & Runnable Code**:
-   - Provide the complete, self-contained, production-ready source code in a single primary code block with the exact language tag (\`\`\`c, \`\`\`cpp, \`\`\`python, \`\`\`java, \`\`\`javascript, etc.).
-   - At the very top of the code block, always include a concise title comment (e.g. /* Bubble Sort in C */, # Breadth First Search in Python, etc.).
-   - Ensure the code has a working main entry point and clean sample test data so clicking "Run" executes and displays results immediately in the terminal.
-3. **Step-by-Step Logic Breakdown**:
-   - Structure explanations with a clear markdown heading (e.g. \`### How the Code Works\`).
-   - When a topic has distinct major sections with multiple sub-explanations or steps (e.g. Graph Representation, BFS Traversal), use numbered sections (\`1. **Section Title**\`, \`2. **Section Title**\`) with indented sub-bullets (\`   - Detail...\`) underneath each.
-   - When explaining simple linear points or side headings (e.g. \`Input\`, \`Bubble Sort\`, \`Output\`), use standard unnumbered bullet points (\`- **Input** – Explanation...\`, \`- **Algorithm** – ...\`) without numbering.
-4. **Time & Space Complexity Analysis**:
-   - Structure with sub-heading \`### Complexity Analysis\`.
-   - \`- **Time Complexity**:\`
-     - \`  - Best Case: $O(...)$ — Reason\`
-     - \`  - Average Case: $O(...)$ — Reason\`
-     - \`  - Worst Case: $O(...)$ — Reason\`
-   - \`- **Space Complexity**:\`
-     - \`  - Auxiliary Space: $O(...)$ — Reason\`
-5. **How to Compile & Run**:
-   - State the command to compile/run (e.g., \`python3 bfs.py\` or \`gcc sort.c -o sort && ./sort\`).
-   - Describe the expected output clearly in text.
+When providing code, algorithms, data structures, scripts, or technical implementations:
+
+1. **Complete & Runnable Code First**:
+   - Provide the complete, self-contained, production-ready source code in standard markdown code blocks with the exact language tag (\`\`\`c, \`\`\`cpp, \`\`\`python, \`\`\`java, \`\`\`typescript, \`\`\`javascript, \`\`\`rust, \`\`\`go, etc.).
+   - Include a concise title comment at the top of the code (e.g. \`/* Bubble Sort in C */\`, \`# Linked List in Python\`).
+   - Include working sample data / test cases inside the code so it runs directly and produces immediate output.
+   - **CRITICAL**: Never truncate code, never leave placeholder comments (such as \`// TODO: implement\`, \`// rest of code here\`), and always ensure all code blocks are properly closed.
+
+2. **Concise, High-Value Explanation**:
+   - Keep the explanation crisp, direct, and focused on key logic and architectural highlights.
+   - Avoid repetitive filler text or excessive preamble.
+
+3. **Complexity & Execution**:
+   - Provide a brief Time and Space complexity summary ($O(...)$).
+   - If relevant, state the one-line run command (e.g., \`gcc main.c -o main && ./main\` or \`python3 main.py\`).
 `.trim();

@@ -210,10 +210,16 @@ export function useChat(options?: UseChatOptions) {
         let pendingArtifacts: Artifact[] = [];
 
         try {
-            const history = updatedWithUser.map(m => ({
-                role: m.role,
-                content: m.text,
-            }));
+            const history = updatedWithUser.map(m => {
+                let content = m.text || '';
+                if (!content && m.artifacts && m.artifacts.length > 0) {
+                    content = m.artifacts.map(a => `[Artifact: ${a.title} (${a.type})]\n${a.content}`).join('\n\n');
+                }
+                return {
+                    role: m.role,
+                    content,
+                };
+            });
 
             // Retrieve persistent memory context ONLY for authenticated users
             let memoryContext: string[] = [];
@@ -303,8 +309,9 @@ export function useChat(options?: UseChatOptions) {
                 const { done, value } = await reader.read();
                 if (done) {
                     if (buffer.trim()) {
-                        const line = buffer.trim();
-                        if (line.startsWith('data:')) {
+                        const trailingLines = buffer.split(/\r?\n/);
+                        for (const line of trailingLines) {
+                            if (!line.startsWith('data:')) continue;
                             const raw = line.slice(5).trim();
                             if (raw !== '[DONE]') {
                                 try {

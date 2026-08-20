@@ -21,15 +21,17 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     let text = raw;
     let activeSkill: string | null = null;
 
-    // 1. Strip reasoning blocks (<think>...</think>, <thought>...</thought>, <reasoning>...</reasoning>)
-    text = text.replace(/[\s\S]*?<\/think>/gi, '');
-    text = text.replace(/<think>[\s\S]*$/gi, '');
+    // 1. Strip reasoning blocks safely without swallowing arbitrary code or template tags
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
 
-    text = text.replace(/[\s\S]*?<\/thought>/gi, '');
-    text = text.replace(/<thought>[\s\S]*$/gi, '');
-
-    text = text.replace(/[\s\S]*?<\/reasoning>/gi, '');
-    text = text.replace(/<reasoning>[\s\S]*$/gi, '');
+    if (!isStreamFinal) {
+        // If an in-flight think tag is still open at the end of the text
+        text = text.replace(/<think>[\s\S]*$/gi, '');
+        text = text.replace(/<thought>[\s\S]*$/gi, '');
+        text = text.replace(/<reasoning>[\s\S]*$/gi, '');
+    }
 
     text = text.trim();
 
@@ -57,7 +59,7 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
             seen.add(fullMatch);
             artifacts.push({
                 id,
-                type: (type as ArtifactType) || 'code',
+                type: (type as ArtifactType) || 'html',
                 title: title || `Artifact ${artifacts.length + 1}`,
                 language,
                 description: `${(type || 'code').toUpperCase()} file`,
@@ -79,7 +81,7 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
 
         artifacts.push({
             id,
-            type: (type as ArtifactType) || 'code',
+            type: (type as ArtifactType) || 'html',
             title: title || 'Interactive Project',
             language,
             description: isStreamFinal ? `${(type || 'code').toUpperCase()} file` : `Generating ${(type || 'code').toUpperCase()}...`,
@@ -87,7 +89,7 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
             isGenerating: !isStreamFinal,
         });
 
-        // Strip the unclosed artifact block from display text so raw code never leaks into chat
+        // Strip the unclosed artifact block from display text only so raw XML wrapper doesn't show
         text = text.replace(fullOpenMatch, '');
     } else if (/<artifact\b/i.test(text)) {
         // Tag is opening without full header yet
@@ -95,30 +97,24 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
         text = text.replace(/<artifact[\s\S]*$/i, '');
     }
 
-    // 5. Fallback Auto-Detection: If raw <!DOCTYPE html> or <html> was output without artifact tags
-    if (artifacts.length === 0 && (text.includes('<!DOCTYPE html>') || text.includes('<html'))) {
-        const htmlStartIndex = text.indexOf('<!DOCTYPE html>') !== -1 ? text.indexOf('<!DOCTYPE html>') : text.indexOf('<html');
-        const preText = text.substring(0, htmlStartIndex).trim();
-        let rawHtml = text.substring(htmlStartIndex).trim();
-
-        // Extract title if present
-        const titleMatch = rawHtml.match(/<title>([^<]+)<\/title>/i);
-        const title = titleMatch ? titleMatch[1].trim() : 'Interactive Simulation';
-
-        // Check if </html> is closed
-        const hasClosingTag = rawHtml.includes('</html>');
+    // 5. Fallback Auto-Detection ONLY for standalone full-document HTML at root level (not within markdown ``` blocks)
+    // Never strip markdown code blocks or code snippets containing HTML tags!
+    const isInsideMarkdownCode = (text.match(/```/g) || []).length % 2 === 1;
+    if (artifacts.length === 0 && !isInsideMarkdownCode && text.startsWith('<!DOCTYPE html>')) {
+        const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+        const title = titleMatch ? titleMatch[1].trim() : 'Interactive Application';
+        const hasClosingTag = text.includes('</html>');
 
         artifacts.push({
             id: 'artifact-0',
             type: 'html',
             title: title,
             description: isStreamFinal || hasClosingTag ? 'HTML Application' : 'Generating HTML...',
-            content: rawHtml,
+            content: text.trim(),
             isGenerating: !(isStreamFinal || hasClosingTag),
         });
 
-        // Replace raw HTML in conversation text
-        text = preText;
+        text = '';
         isComplete = hasClosingTag || isStreamFinal;
     }
 

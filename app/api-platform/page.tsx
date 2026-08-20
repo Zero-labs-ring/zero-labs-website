@@ -177,7 +177,7 @@ function ApiPlatformContent() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold text-[#0A0A0A]">
-                  Titan Pro <span className="text-[#00C8FF]">· 9B</span>
+                  Titan Pro
                 </h3>
                 <span className="px-2 py-0.5 rounded bg-[#E8F8FF] border border-[#00C8FF] text-[#00C8FF] text-[10px] font-mono font-bold uppercase">
                   FASTEST
@@ -214,7 +214,7 @@ function ApiPlatformContent() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold text-[#0A0A0A]">
-                  Titan Ultra <span className="text-[#9333EA]">· 27B</span>
+                  Titan Ultra
                 </h3>
                 <span className="px-2 py-0.5 rounded bg-[#F3E8FF] border border-[#9333EA] text-[#9333EA] text-[10px] font-mono font-bold uppercase">
                   DEEP REASONING
