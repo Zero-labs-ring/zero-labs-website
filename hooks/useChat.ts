@@ -293,8 +293,9 @@ export function useChat(options?: UseChatOptions) {
                 rafId = null;
             };
 
+            let isStreamDone = false;
             while (true) {
-                if (controller.signal.aborted) {
+                if (controller.signal.aborted || isStreamDone) {
                     try { await reader.cancel(); } catch { }
                     break;
                 }
@@ -329,7 +330,10 @@ export function useChat(options?: UseChatOptions) {
                 for (const line of lines) {
                     if (!line.startsWith('data:')) continue;
                     const raw = line.slice(5).trim();
-                    if (raw === '[DONE]') break;
+                    if (raw === '[DONE]') {
+                        isStreamDone = true;
+                        break;
+                    }
 
                     try {
                         const event = JSON.parse(raw);
@@ -369,6 +373,11 @@ export function useChat(options?: UseChatOptions) {
                     } catch {
                         // Skip unparsed lines
                     }
+                }
+
+                if (isStreamDone) {
+                    try { await reader.cancel(); } catch { }
+                    break;
                 }
             }
 
