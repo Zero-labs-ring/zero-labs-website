@@ -201,7 +201,7 @@ export function MessageCard({ message, isStreaming = false, onArtifactView, onCo
                     );
                   },
                   pre({ children }) {
-                    return <div className="not-prose w-full max-w-full min-w-0 my-3 overflow-x-auto">{children}</div>;
+                    return <div className="not-prose w-full max-w-full min-w-0 my-2">{children}</div>;
                   },
                 }}
               >

@@ -259,8 +259,8 @@ export function CodeBlock({ language = '', code }: CodeBlockProps) {
         className={`relative w-full max-w-full overflow-x-auto p-4 sm:p-5 text-[13px] sm:text-[14px] leading-relaxed bg-[#1E1E1E] ${!terminalOpen ? 'rounded-b-2xl' : ''}`}
       >
         <pre 
-          className="!bg-transparent !p-0 !m-0 !border-0 !shadow-none font-mono text-[#D4D4D4] !whitespace-pre tab-4 select-text overflow-x-auto"
-          style={{ whiteSpace: 'pre', wordBreak: 'normal', overflowX: 'auto' }}
+          className="!bg-transparent !p-0 !m-0 !border-0 !shadow-none font-mono text-[#D4D4D4] !whitespace-pre tab-4 select-text"
+          style={{ whiteSpace: 'pre', wordBreak: 'normal' }}
         >
           <code
             className="hljs !bg-transparent !p-0 !text-[#D4D4D4]"
