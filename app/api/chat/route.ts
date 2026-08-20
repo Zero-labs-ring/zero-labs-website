@@ -136,8 +136,13 @@ async function callZeroGpu(
                 messages,
                 temperature: isUltra ? 0.6 : 0.7,
                 max_tokens: effectiveTokens,
+                max_new_tokens: effectiveTokens,
                 stream: true,
-                ...(webSearch ? { extra_body: { web_search: true } } : {}),
+                extra_body: {
+                    max_tokens: effectiveTokens,
+                    max_new_tokens: effectiveTokens,
+                    ...(webSearch ? { web_search: true } : {})
+                },
             }),
             signal: clientSignal,
         });

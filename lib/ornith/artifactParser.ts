@@ -147,16 +147,33 @@ export function detectToolCall(text: string): string | null {
     return match ? match[1] : null;
 }
 
-// Helper to detect if an assistant response appears truncated (e.g. ends mid-statement or unclosed block)
 export function isResponseTruncated(raw: string): boolean {
-    if (!raw || raw.length < 50) return false;
+    if (!raw || raw.length < 30) return false;
     const trimmed = raw.trim();
-    // Odd number of code fences
+    
+    // 1. Odd number of code fences
     const fenceCount = (trimmed.match(/```/g) || []).length;
     if (fenceCount % 2 === 1) return true;
-    
-    // Ends with trailing unclosed operators, open parens, or cut off keywords
-    const endsWithCutoff = /(=|\+|\-|\*|\/|,|\(|\[|\{|\b(?:return|if|else|for|while|const|let|var|int|float|double|char|void|def|class|function|struct|switch|case|import|export|from)\s*)$/i.test(trimmed);
-    return endsWithCutoff;
+
+    // 2. Unclosed HTML/XML artifact tags
+    if (/<artifact\b[^>]*>(?:(?!<\/artifact>)[\s\S])*$/i.test(trimmed)) return true;
+
+    // 3. Ends with trailing unclosed operators, parens, or cut off keywords
+    const endsWithCutoff = /(=|\+|\-|\*|\/|,|\(|\[|\{|\b(?:return|if|else|for|while|const|let|var|int|float|double|char|void|def|class|function|struct|switch|case|import|export|from|include|printf|scanf|malloc|free|cout|cin|inOrder|preOrder|postOrder)\s*)$/i.test(trimmed);
+    if (endsWithCutoff) return true;
+
+    // 4. Check if last code block is unclosed or ends without proper statement termination
+    const codeBlockMatches = trimmed.match(/```[a-zA-Z0-9_-]*\n([\s\S]*?)(?:```|$)/g);
+    if (codeBlockMatches && codeBlockMatches.length > 0) {
+        const lastBlock = codeBlockMatches[codeBlockMatches.length - 1];
+        if (!lastBlock.endsWith('```')) {
+            const blockTrimmed = lastBlock.trim();
+            if (!/[;}\)>]$/.test(blockTrimmed)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 

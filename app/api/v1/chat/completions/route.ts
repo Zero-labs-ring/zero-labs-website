@@ -41,11 +41,18 @@ export async function POST(req: NextRequest) {
 
     const lastMsgContent = Array.isArray(body.messages) ? (body.messages[body.messages.length - 1]?.content || '') : '';
     const dynamicMaxTokens = body.max_tokens || body.maxTokens || body.max_new_tokens || 131072;
+    const effectiveMaxTokens = Math.min(Math.max(dynamicMaxTokens, 512), 131072);
 
     const forwardedBody = {
       ...body,
       model: internalModel,
-      max_tokens: Math.min(Math.max(dynamicMaxTokens, 512), 131072),
+      max_tokens: effectiveMaxTokens,
+      max_new_tokens: effectiveMaxTokens,
+      extra_body: {
+        max_tokens: effectiveMaxTokens,
+        max_new_tokens: effectiveMaxTokens,
+        ...(body.extra_body || {}),
+      },
     };
 
     // 5. Forward request to internal backend URL

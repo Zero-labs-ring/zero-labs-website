@@ -293,7 +293,9 @@ export function useChat(options?: UseChatOptions) {
 
                 if (pendingArtifacts.length > 0) {
                     setActiveArtifact(prev => {
-                        if (!prev) return null;
+                        if (!prev) {
+                            return pendingArtifacts[pendingArtifacts.length - 1];
+                        }
                         const updated = pendingArtifacts.find(a => a.id === prev.id);
                         return updated || prev;
                     });
@@ -434,6 +436,9 @@ export function useChat(options?: UseChatOptions) {
                 };
                 setMessages(prev => prev.map(m => m.id === assistantId ? finalAssistantMessage : m));
                 setActiveArtifact(prev => {
+                    if (!prev && finalArtifacts.length > 0) {
+                        return finalArtifacts[finalArtifacts.length - 1];
+                    }
                     if (!prev) return null;
                     const updated = finalArtifacts.find(a => a.id === prev.id);
                     return updated ? { ...updated, isGenerating: false } : prev;

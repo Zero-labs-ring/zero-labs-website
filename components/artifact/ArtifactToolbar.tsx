@@ -247,7 +247,12 @@ async function downloadPdf(artifact: Artifact) {
     doc.save(`${slug(artifact.title)}.pdf`);
 }
 
-export function ArtifactToolbar({ artifact }: Props) {
+interface Props {
+    artifact: Artifact;
+    showTitle?: boolean;
+}
+
+export function ArtifactToolbar({ artifact, showTitle = false }: Props) {
     const copy = () => navigator.clipboard.writeText(artifact.content);
     const dlMd = () => saveAs(new Blob([artifact.content], { type: 'text/markdown;charset=utf-8' }), `${slug(artifact.title)}.md`);
     const dlHtml = () => saveAs(new Blob([artifact.content], { type: 'text/html;charset=utf-8' }), `${slug(artifact.title)}.html`);
@@ -264,48 +269,100 @@ export function ArtifactToolbar({ artifact }: Props) {
     };
 
     return (
-        <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800 border-b border-zinc-700 text-xs text-zinc-300 flex-wrap">
-            <span className="font-medium text-white truncate flex-1">{artifact.title}</span>
-            <span className="text-zinc-500">{typeLabel[artifact.type] ?? artifact.type}</span>
-            <button onClick={copy} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">Copy</button>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-300 flex-wrap">
+            {showTitle && (
+                <>
+                    <span className="font-medium text-white truncate max-w-[180px]">{artifact.title}</span>
+                    <span className="text-zinc-500 text-[11px]">{typeLabel[artifact.type] ?? artifact.type}</span>
+                </>
+            )}
+            <button
+                onClick={copy}
+                className="hover:text-white px-2.5 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                title="Copy to clipboard"
+            >
+                Copy
+            </button>
 
             {(artifact.type === 'markdown' || artifact.type === 'md') && (
                 <>
-                    <button onClick={dlMd} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.md</button>
-                    <button onClick={() => downloadDocx(artifact)} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.docx</button>
+                    <button
+                        onClick={dlMd}
+                        className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                        title="Download Markdown"
+                    >
+                        .md
+                    </button>
+                    <button
+                        onClick={() => downloadDocx(artifact)}
+                        className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                        title="Download Word (.docx)"
+                    >
+                        .docx
+                    </button>
                 </>
             )}
             {artifact.type === 'docx' && (
-                <button onClick={() => downloadDocx(artifact)} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.docx</button>
+                <button
+                    onClick={() => downloadDocx(artifact)}
+                    className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                    title="Download Word (.docx)"
+                >
+                    .docx
+                </button>
             )}
             {artifact.type === 'html' && (
-                <button onClick={dlHtml} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.html</button>
+                <button
+                    onClick={dlHtml}
+                    className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                    title="Download HTML file"
+                >
+                    .html
+                </button>
             )}
             {artifact.type === 'code' && (
-                <button onClick={dlCode} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">
+                <button
+                    onClick={dlCode}
+                    className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                    title={`Download .${artifact.language ?? 'txt'}`}
+                >
                     .{artifact.language ?? 'txt'}
                 </button>
             )}
             {artifact.type === 'pptx' && (
-                <button onClick={() => downloadPptx(artifact)} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.pptx</button>
+                <button
+                    onClick={() => downloadPptx(artifact)}
+                    className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors text-amber-300 font-semibold"
+                    title="Download PowerPoint Presentation"
+                >
+                    ⬇ .pptx
+                </button>
             )}
             {artifact.type === 'pdf' && (
                 <button
                     onClick={() => downloadPdf(artifact)}
-                    className="flex items-center gap-1 hover:text-white px-2 py-1 rounded hover:bg-zinc-700 text-red-300 font-semibold"
+                    className="flex items-center gap-1 hover:text-white px-2.5 py-1 rounded-md bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-300 font-semibold transition-colors"
+                    title="Download PDF Document"
                 >
-                    ⬇ Download PDF
+                    ⬇ PDF
                 </button>
             )}
             {(artifact.type === 'xlsx' || artifact.type === 'csv') && (
                 <>
                     <button
                         onClick={() => downloadXlsx(artifact)}
-                        className="flex items-center gap-1 hover:text-white px-2 py-1 rounded hover:bg-zinc-700 text-emerald-300 font-semibold"
+                        className="flex items-center gap-1 hover:text-white px-2.5 py-1 rounded-md bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/40 text-emerald-300 font-semibold transition-colors"
+                        title="Download Excel Spreadsheet"
                     >
-                        ⬇ Download .xlsx
+                        ⬇ .xlsx
                     </button>
-                    <button onClick={dlCsv} className="hover:text-white px-2 py-1 rounded hover:bg-zinc-700">.csv</button>
+                    <button
+                        onClick={dlCsv}
+                        className="hover:text-white px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-colors"
+                        title="Download CSV"
+                    >
+                        .csv
+                    </button>
                 </>
             )}
         </div>
