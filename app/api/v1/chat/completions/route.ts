@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/apiKeyAuth';
 
-export const maxDuration = 18000;
+export const maxDuration = 1800;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {

@@ -6,8 +6,8 @@ import { isResponseTruncated } from '@/lib/ornith/artifactParser';
 const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
 const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
 
-// Enable 5-hour maximum allowed execution duration
-export const maxDuration = 18000;
+// Enable 30-minute maximum allowed execution duration
+export const maxDuration = 1800;
 export const dynamic = 'force-dynamic';
 
 // Fast pre-defined greetings dictionary (Instant 0ms TTFT & credit saver)
