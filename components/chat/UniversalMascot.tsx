@@ -201,7 +201,7 @@ const UniversalMascot = forwardRef<MascotHandle, UniversalMascotProps>(
       weather: externalWeather = null,
       onInteract,
       enableDebugPanel = false,
-      showFloatingToggle = true,
+      showFloatingToggle = false,
     },
     ref,
   ) {
