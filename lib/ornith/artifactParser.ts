@@ -100,12 +100,21 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
             isGenerating: !isStreamFinal,
         });
 
-        // Strip the unclosed artifact block from display text only so raw XML wrapper doesn't show
-        text = text.replace(fullOpenMatch, '');
+        // If stream is final and tag was left open, keep the partial content visible as text or artifact
+        if (isStreamFinal) {
+            text = text.replace(/<artifact\s+type="([^"]+)"(?:\s+language="([^"]+)")?(?:\s+title="([^"]+)")?[^>]*>/i, '');
+        } else {
+            // Strip the unclosed artifact block from display text only during active streaming so raw XML wrapper doesn't flicker
+            text = text.replace(fullOpenMatch, '');
+        }
     } else if (/<artifact\b/i.test(text)) {
         // Tag is opening without full header yet
         isComplete = isStreamFinal;
-        text = text.replace(/<artifact[\s\S]*$/i, '');
+        if (!isStreamFinal) {
+            text = text.replace(/<artifact[\s\S]*$/i, '');
+        } else {
+            text = text.replace(/<artifact\b[^>]*>/gi, '');
+        }
     }
 
     // 5. Fallback Auto-Detection ONLY for standalone full-document HTML at root level (not within markdown ``` blocks)

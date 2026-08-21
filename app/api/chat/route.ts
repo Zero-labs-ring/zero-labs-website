@@ -6,8 +6,8 @@ import { isResponseTruncated } from '@/lib/ornith/artifactParser';
 const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
 const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
 
-// Enable maximum allowed execution duration for Vercel Serverless Function (60s Hobby / up to 300s Pro)
-export const maxDuration = 60;
+// Enable maximum allowed execution duration for Vercel Serverless Function (up to 300s)
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 // Fast pre-defined greetings dictionary (Instant 0ms TTFT & credit saver)

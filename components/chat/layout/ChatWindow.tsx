@@ -6,7 +6,7 @@ import { PanelLeft, Menu, Square } from 'lucide-react'
 import { MessageCard } from '../messages/MessageCard'
 import { WelcomeScreen } from './WelcomeScreen'
 import { InputBar } from '../input/InputBar'
-import { useChat } from '@/hooks/useChat'
+import type { useChat } from '@/hooks/useChat'
 import { ArtifactViewer } from '../artifacts/ArtifactViewer'
 import UniversalMascot, { MascotHandle } from '../UniversalMascot'
 import { Message } from '@/types'
@@ -20,20 +20,19 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ onChatMenuClick, onPageNavClick, sidebarOpen, chatState: passedChatState, onNewChat }: ChatWindowProps) {
-  const localChatState = useChat();
   const {
-    messages,
+    messages = [],
     sendMessage,
     continueMessage,
     stop,
-    isTyping,
-    searchStatus,
-    activeSkill,
-    activeArtifact,
+    isTyping = false,
+    searchStatus = null,
+    activeSkill = null,
+    activeArtifact = null,
     setActiveArtifact,
     activeModelName,
-    isLoadingSession,
-  } = (passedChatState || localChatState) as any;
+    isLoadingSession = false,
+  } = (passedChatState || {}) as any;
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef<boolean>(true)
   const chatBoxRef = useRef<HTMLDivElement>(null)
