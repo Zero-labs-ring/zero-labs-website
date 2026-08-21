@@ -286,10 +286,10 @@ export async function POST(req: NextRequest) {
 
                         if (!upstream || !upstream.ok) {
                             if (turn === 1) {
-                                const errText = upstream ? await upstream.text() : 'No active GPU instance responding';
+                                const friendlyMsg = `⏳ **Maximum Users Limit Reached**\n\nMaximum users are currently using the service. Please wait for some time and try again.`;
                                 enqueue(JSON.stringify({
                                     type: 'error',
-                                    error: `Zero AI GPU Cluster Error: ${errText || 'Inference cluster is offline or initializing.'}`
+                                    error: friendlyMsg
                                 }));
                             }
                             break;

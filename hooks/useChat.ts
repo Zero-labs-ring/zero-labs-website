@@ -360,7 +360,7 @@ export function useChat(options?: UseChatOptions) {
                             setSearchStatus('⚡ Search synthesized, streaming GPU response…');
                         }
                         if (event.type === 'error') {
-                            accumulated = `⚠️ ${event.error || 'GPU inference cluster error'}`;
+                            accumulated = event.error || '⏳ **Maximum Users Limit Reached**\n\nMaximum users are currently using the service. Please wait for some time and try again.';
                             pendingText = accumulated;
                             if (!rafId) {
                                 rafId = requestAnimationFrame(flushStreamUpdate);
