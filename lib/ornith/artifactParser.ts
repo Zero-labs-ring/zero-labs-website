@@ -67,32 +67,25 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
         text = text.replace(skillMatch[0], '').trim();
     }
 
-    // 3. Extract and replace all fully closed <artifact ...>...</artifact> tags
-    const closedArtifactRegex = /<artifact\s+type="([^"]+)"(?:\s+language="([^"]+)")?(?:\s+title="([^"]+)")?[^>]*>([\s\S]*?)<\/artifact>/gi;
-    let match: RegExpExecArray | null;
-    const seen = new Set<string>();
-
-    while ((match = closedArtifactRegex.exec(text)) !== null) {
-        const [fullMatch, type, language, title, content] = match;
+    // 3. Extract and replace all fully closed <artifact ...>...</artifact> tags (tolerant to single quotes, double quotes, unquoted attributes, spaces)
+    const closedArtifactRegex = /<artifact\s+type=["']?([^"'\s>]+)["']?(?:\s+language=["']?([^"'\s>]+)["']?)?(?:\s+title=["']?([^"'>]+)["']?)?[^>]*>([\s\S]*?)<\/artifact>/gi;
+    
+    text = text.replace(closedArtifactRegex, (_fullMatch, type, language, title, content) => {
         const id = `artifact-${artifacts.length}`;
+        artifacts.push({
+            id,
+            type: (type as ArtifactType) || 'html',
+            title: title ? title.trim() : `Artifact ${artifacts.length + 1}`,
+            language: language ? language.trim() : undefined,
+            description: `${(type || 'code').toUpperCase()} file`,
+            content: content.trim(),
+            isGenerating: false,
+        });
+        return '';
+    });
 
-        if (!seen.has(fullMatch)) {
-            seen.add(fullMatch);
-            artifacts.push({
-                id,
-                type: (type as ArtifactType) || 'html',
-                title: title || `Artifact ${artifacts.length + 1}`,
-                language,
-                description: `${(type || 'code').toUpperCase()} file`,
-                content: content.trim(),
-                isGenerating: false,
-            });
-            text = text.replace(fullMatch, '');
-        }
-    }
-
-    // 4. Check for in-progress (unclosed) <artifact ...> tag currently streaming
-    const openArtifactMatch = text.match(/<artifact\s+type="([^"]+)"(?:\s+language="([^"]+)")?(?:\s+title="([^"]+)")?[^>]*>([\s\S]*)$/i);
+    // 4. Check for in-progress (unclosed) <artifact ...> tag currently streaming or cut off midway
+    const openArtifactMatch = text.match(/<artifact\s+type=["']?([^"'\s>]+)["']?(?:\s+language=["']?([^"'\s>]+)["']?)?(?:\s+title=["']?([^"'>]+)["']?)?[^>]*>([\s\S]*)$/i);
     let isComplete = true;
 
     if (openArtifactMatch) {
@@ -103,16 +96,16 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
         artifacts.push({
             id,
             type: (type as ArtifactType) || 'html',
-            title: title || 'Interactive Project',
-            language,
+            title: title ? title.trim() : 'Interactive Project',
+            language: language ? language.trim() : undefined,
             description: isStreamFinal ? `${(type || 'code').toUpperCase()} file` : `Generating ${(type || 'code').toUpperCase()}...`,
             content: partialContent.trim(),
             isGenerating: !isStreamFinal,
         });
 
-        // If stream is final and tag was left open, keep the partial content visible as text or artifact
+        // If stream is final and tag was left open, clean the opening XML wrapper from visible text
         if (isStreamFinal) {
-            text = text.replace(/<artifact\s+type="([^"]+)"(?:\s+language="([^"]+)")?(?:\s+title="([^"]+)")?[^>]*>/i, '');
+            text = text.replace(/<artifact\s+type=["']?([^"'\s>]+)["']?(?:\s+language=["']?([^"'\s>]+)["']?)?(?:\s+title=["']?([^"'>]+)["']?)?[^>]*>/i, '');
         } else {
             // Strip the unclosed artifact block from display text only during active streaming so raw XML wrapper doesn't flicker
             text = text.replace(fullOpenMatch, '');
@@ -128,7 +121,6 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     }
 
     // 5. Fallback Auto-Detection ONLY for standalone full-document HTML at root level (not within markdown ``` blocks)
-    // Never strip markdown code blocks or code snippets containing HTML tags!
     const isInsideMarkdownCode = (text.match(/```/g) || []).length % 2 === 1;
     if (artifacts.length === 0 && !isInsideMarkdownCode && text.startsWith('<!DOCTYPE html>')) {
         const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
@@ -167,7 +159,7 @@ export function detectToolCall(text: string): string | null {
 }
 
 export function isResponseTruncated(raw: string): boolean {
-    if (!raw || raw.length < 30) return false;
+    if (!raw || raw.trim().length < 5) return false;
     const trimmed = raw.trim();
     
     // 1. Odd number of code fences
