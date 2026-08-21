@@ -38,10 +38,20 @@ export function parseArtifacts(raw: string, isStreamFinal: boolean = false): Par
     }
 
     if (!isStreamFinal) {
-        // If an in-flight think tag is still open at the end of the text
+        // If an in-flight think tag is still actively streaming at the end of the text
         text = text.replace(/<think>[\s\S]*$/gi, '');
         text = text.replace(/<thought>[\s\S]*$/gi, '');
         text = text.replace(/<reasoning>[\s\S]*$/gi, '');
+    } else {
+        // If stream ended with an unclosed <think> tag:
+        // Strip the opening tag so that if the model put actual response text after/inside <think>, it is NOT hidden
+        if (/<think>/i.test(text)) {
+            const thinkIndex = text.search(/<think>/i);
+            const afterThink = text.slice(thinkIndex).replace(/<think>/i, '').trim();
+            const beforeThink = text.slice(0, thinkIndex).trim();
+            text = (beforeThink ? beforeThink + '\n\n' : '') + afterThink;
+        }
+        text = text.replace(/<thought>/gi, '').replace(/<reasoning>/gi, '');
     }
 
     text = text.trim();
