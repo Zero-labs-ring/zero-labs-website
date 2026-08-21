@@ -9,11 +9,11 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     isLoading: boolean;
-    signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-    signUpWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null; user: User | null }>;
-    signInWithGoogle: () => Promise<{ error: AuthError | null }>;
-    forgotPassword: (email: string) => Promise<{ error: AuthError | null }>;
-    updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
+    signInWithEmail: (email: string, password: string) => Promise<{ error: { message: string } | null }>;
+    signUpWithEmail: (email: string, password: string, name?: string) => Promise<{ error: { message: string } | null; user: User | null }>;
+    signInWithGoogle: () => Promise<{ error: { message: string } | null }>;
+    forgotPassword: (email: string) => Promise<{ error: { message: string } | null }>;
+    updatePassword: (password: string) => Promise<{ error: { message: string } | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -76,52 +76,137 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, [migrateGuestSessions]);
 
-    // Sign in with Email & Password
-    const signInWithEmail = async (email: string, password: string) => {
+    // Sign in with Email & Password (with automatic auto-confirm recovery)
+    const signInWithEmail = async (email: string, password: string): Promise<{ error: { message: string } | null }> => {
         const supabase = getSupabaseBrowserClient();
         if (!supabase) {
-            return { error: { message: 'Supabase client is not configured' } as AuthError };
+            return { error: { message: 'Supabase client is not configured' } };
         }
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
+
+        const cleanEmail = email.trim().toLowerCase();
+
+        let { data, error } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
             password,
         });
+
+        // If email confirmation is holding back this account, auto-confirm on backend and retry!
+        if (error && (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('not confirmed'))) {
+            try {
+                const confirmRes = await fetch('/api/auth/auto-confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: cleanEmail }),
+                });
+
+                if (confirmRes.ok) {
+                    const retryResult = await supabase.auth.signInWithPassword({
+                        email: cleanEmail,
+                        password,
+                    });
+                    data = retryResult.data;
+                    error = retryResult.error;
+                }
+            } catch (autoErr) {
+                console.warn('Auto-confirm retry warning:', autoErr);
+            }
+        }
+
         if (!error && data.user) {
             setUser(data.user);
             setSession(data.session);
             await migrateGuestSessions(data.user.id);
+            return { error: null };
         }
-        return { error };
+
+        const friendlyMsg = error?.message?.includes('Invalid login credentials')
+            ? 'Invalid email or password. Please check your credentials.'
+            : (error?.message || 'Failed to sign in.');
+
+        return { error: { message: friendlyMsg } };
     };
 
-    // Sign up with Email & Password
-    const signUpWithEmail = async (email: string, password: string) => {
+    // Sign up with Email & Password (server-side creation with pre-verified email)
+    const signUpWithEmail = async (
+        email: string,
+        password: string,
+        name?: string
+    ): Promise<{ error: { message: string } | null; user: User | null }> => {
         const supabase = getSupabaseBrowserClient();
         if (!supabase) {
-            return { error: { message: 'Supabase client is not configured' } as AuthError, user: null };
+            return { error: { message: 'Supabase client is not configured' }, user: null };
         }
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+
+        const cleanEmail = email.trim().toLowerCase();
+
+        try {
+            // 1. Call server-side verified account creation route
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: cleanEmail,
+                    password,
+                    name: name || cleanEmail.split('@')[0],
+                }),
+            });
+
+            const result = await res.json();
+
+            if (!res.ok || result.error) {
+                return { error: { message: result.error || 'Failed to create account.' }, user: null };
             }
-        });
-        if (!error && data.user) {
-            setUser(data.user);
-            setSession(data.session);
-            if (data.user.id) {
-                await migrateGuestSessions(data.user.id);
+
+            // 2. Automatically sign in with client to establish session
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                email: cleanEmail,
+                password,
+            });
+
+            if (loginError) {
+                // If auto-confirm is needed
+                await fetch('/api/auth/auto-confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: cleanEmail }),
+                });
+
+                const retryLogin = await supabase.auth.signInWithPassword({
+                    email: cleanEmail,
+                    password,
+                });
+
+                if (retryLogin.error) {
+                    return { error: { message: 'Account created! Please log in with your credentials.' }, user: null };
+                }
+
+                if (retryLogin.data.user) {
+                    setUser(retryLogin.data.user);
+                    setSession(retryLogin.data.session);
+                    await migrateGuestSessions(retryLogin.data.user.id);
+                    return { error: null, user: retryLogin.data.user };
+                }
             }
+
+            if (loginData?.user) {
+                setUser(loginData.user);
+                setSession(loginData.session);
+                await migrateGuestSessions(loginData.user.id);
+                return { error: null, user: loginData.user };
+            }
+
+            return { error: null, user: null };
+        } catch (err: any) {
+            console.error('Sign up error:', err);
+            return { error: { message: err.message || 'An unexpected error occurred during signup.' }, user: null };
         }
-        return { error, user: data.user };
     };
 
-    // Real Google OAuth
-    const signInWithGoogle = async () => {
+    // Google OAuth
+    const signInWithGoogle = async (): Promise<{ error: { message: string } | null }> => {
         const supabase = getSupabaseBrowserClient();
         if (!supabase) {
-            return { error: { message: 'Supabase client is not configured' } as AuthError };
+            return { error: { message: 'Supabase client is not configured' } };
         }
         const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
         const { error } = await supabase.auth.signInWithOAuth({
@@ -134,32 +219,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
             },
         });
-        return { error };
+        return { error: error ? { message: error.message } : null };
     };
 
     // Send Forgot Password Email Link
-    const forgotPassword = async (email: string) => {
+    const forgotPassword = async (email: string): Promise<{ error: { message: string } | null }> => {
         const supabase = getSupabaseBrowserClient();
         if (!supabase) {
-            return { error: { message: 'Supabase client is not configured' } as AuthError };
+            return { error: { message: 'Supabase client is not configured' } };
         }
         const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/chat?view=reset-password` : '';
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
             redirectTo,
         });
-        return { error };
+        return { error: error ? { message: error.message } : null };
     };
 
     // Update password (for users arriving via password reset link)
-    const updatePassword = async (password: string) => {
+    const updatePassword = async (password: string): Promise<{ error: { message: string } | null }> => {
         const supabase = getSupabaseBrowserClient();
         if (!supabase) {
-            return { error: { message: 'Supabase client is not configured' } as AuthError };
+            return { error: { message: 'Supabase client is not configured' } };
         }
         const { error } = await supabase.auth.updateUser({
             password,
         });
-        return { error };
+        return { error: error ? { message: error.message } : null };
     };
 
     // Sign out
