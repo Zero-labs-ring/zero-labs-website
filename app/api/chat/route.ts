@@ -6,8 +6,8 @@ import { isResponseTruncated } from '@/lib/ornith/artifactParser';
 const ZERO_GPU_BASE = process.env.INTERNAL_BACKEND_URL || process.env.ZERO_GPU_API_BASE || '';
 const ZERO_GPU_API_KEY = process.env.INTERNAL_SECRET || process.env.ZERO_GPU_API_KEY || '';
 
-// Enable maximum allowed execution duration for Vercel Serverless Function (up to 300s)
-export const maxDuration = 300;
+// Enable 5-hour maximum allowed execution duration
+export const maxDuration = 18000;
 export const dynamic = 'force-dynamic';
 
 // Fast pre-defined greetings dictionary (Instant 0ms TTFT & credit saver)
@@ -58,6 +58,14 @@ function calculateDynamicMaxTokens(
 ): number {
     if (typeof requestedMaxTokens === 'number' && requestedMaxTokens > 0) {
         return Math.min(Math.max(requestedMaxTokens, 512), 131072);
+    }
+
+    const p = (promptText || '').toLowerCase();
+    const isCodingOrLongTask = /\b(code|function|script|class|python|html|react|app|build|implement|debug|algorithm|sql|file|program|write|create|game|component|design|document|full|complete)\b/i.test(p);
+    
+    // For coding, long-form authoring, and complex reasoning, provide full 128K headroom
+    if (isCodingOrLongTask) {
+        return 131072;
     }
 
     return 131072;

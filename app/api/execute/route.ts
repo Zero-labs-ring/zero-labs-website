@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const maxDuration = 60;
+export const maxDuration = 18000;
 export const dynamic = 'force-dynamic';
 
 const WANDBOX_COMPILERS: Record<string, { compiler: string; name: string }> = {

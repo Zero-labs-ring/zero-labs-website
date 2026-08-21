@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/apiKeyAuth';
 
-export const maxDuration = 60;
+export const maxDuration = 18000;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -83,9 +83,10 @@ export async function POST(req: NextRequest) {
       return new Response(upstreamRes.body, {
         status: 200,
         headers: {
-          'Content-Type': 'text/event-stream',
+          'Content-Type': 'text/event-stream; charset=utf-8',
           'Cache-Control': 'no-cache, no-transform',
           'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
         },
       });
     }

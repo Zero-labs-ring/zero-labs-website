@@ -31,6 +31,20 @@ function ZeroChatContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalView, setAuthModalView] = useState<AuthModalView>('login')
   const [softGateOpen, setSoftGateOpen] = useState(false)
+  const [guestTrialCount, setGuestTrialCount] = useState(0)
+  const GUEST_TRIAL_LIMIT = 5
+
+  // Initialize and sync guest trial count (unlimited for logged in users)
+  useEffect(() => {
+    if (!user) {
+      try {
+        const raw = localStorage.getItem('zero_guest_msg_count') || '0'
+        setGuestTrialCount(parseInt(raw, 10) || 0)
+      } catch { }
+    } else {
+      setGuestTrialCount(0)
+    }
+  }, [user])
 
   // Multi-session history
   const {
@@ -95,7 +109,7 @@ function ZeroChatContent() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Refetch sessions when user logs in or out
+  // Sync session on mount/auth change
   useEffect(() => {
     refreshSessions()
   }, [user, refreshSessions])
@@ -115,24 +129,36 @@ function ZeroChatContent() {
     onTitleGenerated: handleTitleGenerated,
   })
 
-  // Intercept send to track 5-question soft gate for guest users
+  // Enforce 5-trial limit for guest users (Unlimited for logged-in users)
   const handleSendMessage = useCallback(async (text: string, modelName?: string, webSearch?: boolean) => {
     if (!user) {
+      const rawCount = localStorage.getItem('zero_guest_msg_count') || '0'
+      const count = parseInt(rawCount, 10) || 0
+
+      // If guest has used all 5 free trials, hard-gate and require login for unlimited
+      if (count >= GUEST_TRIAL_LIMIT) {
+        setGuestTrialCount(count)
+        setSoftGateOpen(true)
+        return
+      }
+
+      // Increment guest trial count
+      const newCount = count + 1
+      setGuestTrialCount(newCount)
       try {
-        const rawCount = localStorage.getItem('zero_guest_msg_count') || '0'
-        const count = parseInt(rawCount, 10) + 1
-        localStorage.setItem('zero_guest_msg_count', count.toString())
-
-        const isDismissed = localStorage.getItem('zero_soft_gate_dismissed') === 'true'
-
-        if (count >= 5 && !isDismissed) {
-          setSoftGateOpen(true)
-        }
+        localStorage.setItem('zero_guest_msg_count', newCount.toString())
       } catch { }
+
+      // If this is their 5th trial question, prompt them to sign in for unlimited after sending
+      if (newCount >= GUEST_TRIAL_LIMIT) {
+        setTimeout(() => {
+          setSoftGateOpen(true)
+        }, 1200)
+      }
     }
 
     return chatState.send(text, modelName, webSearch)
-  }, [user, chatState])
+  }, [user, chatState, GUEST_TRIAL_LIMIT])
 
   const handleNewChat = useCallback(async () => {
     const newId = await createSession('New Chat')
@@ -269,11 +295,14 @@ function ZeroChatContent() {
         onClearHistory={handleClearAllHistory}
       />
 
-      {/* ── Soft Gate Prompt (Appears on 5th question for guests) ── */}
+      {/* ── 5-Trial Limit / Unlimited Gate Modal ── */}
       <SoftGateModal
         isOpen={softGateOpen}
+        isHardLimit={!user && guestTrialCount >= GUEST_TRIAL_LIMIT}
+        usedCount={guestTrialCount}
+        maxTrials={GUEST_TRIAL_LIMIT}
         onSignIn={handleSoftGateSignIn}
-        onSignInLater={handleSoftGateSignInLater}
+        onSignInLater={guestTrialCount < GUEST_TRIAL_LIMIT ? handleSoftGateSignInLater : undefined}
       />
 
       {/* ── Production Authentication Modal (Login / Signup / Forgot Password) ── */}
