@@ -182,7 +182,11 @@ export function MessageCard({ message, isStreaming = false, onArtifactView, onCo
                     const match = /language-(\w+)/.exec(className || '');
                     const codeString = String(children).replace(/\n$/, '');
 
-                    if (!inline) {
+                    // In react-markdown v9, inline prop is undefined.
+                    // A code block has language-* className OR contains newline characters.
+                    const isCodeBlock = Boolean(match || codeString.includes('\n'));
+
+                    if (isCodeBlock) {
                       return (
                         <CodeBlock
                           language={match ? match[1] : ''}

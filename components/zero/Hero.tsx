@@ -66,11 +66,11 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
             style={{
-              width: "100%", maxWidth: 410,
+              width: "100%", maxWidth: 740,
               marginTop: 22, marginBottom: 6,
               background: "#FFFFFF",
-              border: "1.5px solid #0A0A0A",
-              borderRadius: 20,
+              border: "2px solid #0A0A0A",
+              borderRadius: 22,
               boxShadow: "4px 4px 0 #0A0A0A",
               padding: "10px 10px 12px",
               display: "flex",
@@ -80,17 +80,17 @@ export default function Hero() {
               overflow: "hidden"
             }}
           >
-            {/* The Ring Image - Flush Fit */}
-            <div className="float-anim" style={{ display: "flex", justifyContent: "center", width: "100%", borderRadius: 12, overflow: "hidden" }}>
+            {/* The Ring Ecosystem Diagram */}
+            <div style={{ display: "flex", justifyContent: "center", width: "100%", borderRadius: 14, overflow: "hidden", background: "#FAF9F6" }}>
               <img
-                src="/zero_ring_dragonfly.png"
-                alt="Zero Ring — AI-powered smart ring with transparent body, OLED display, and camera, featured with a mechanical dragonfly"
+                src="/zero_network_ecosystem.png"
+                alt="Zero Ring — One Network. Everything Connected. Physical life to Digital intelligence."
                 style={{
                   width: "100%",
                   height: "auto",
                   display: "block",
                   objectFit: "contain",
-                  borderRadius: 10
+                  borderRadius: 12
                 }}
               />
             </div>
@@ -106,10 +106,10 @@ export default function Hero() {
               display: "flex", justifyContent: "space-between", alignItems: "center"
             }}>
               <span style={{ fontFamily: "var(--font-space-mono)", fontSize: 10, color: "#666660", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>
-                Zero Ring · Gen 1
+                Zero Ring · Neural Ecosystem
               </span>
               <span style={{ fontFamily: "var(--font-space-mono)", fontSize: 10, color: "#00C8FF", fontWeight: 800 }}>
-                SIZES 6–12
+                ONE NETWORK · SIZES 6–12
               </span>
             </div>
           </motion.div>

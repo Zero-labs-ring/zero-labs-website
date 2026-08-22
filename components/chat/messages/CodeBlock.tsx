@@ -29,6 +29,35 @@ function formatTitle(str: string): string {
     .join(' ')
 }
 
+const EXECUTABLE_LANGS = new Set([
+  'c', 'cpp', 'c++', 'cc', 'cxx',
+  'python', 'py', 'python3',
+  'javascript', 'js', 'jsx', 'node',
+  'typescript', 'ts', 'tsx',
+  'java',
+  'rust', 'rs',
+  'go', 'golang',
+  'csharp', 'c#', 'cs',
+  'php',
+  'ruby', 'rb',
+  'swift',
+  'r',
+  'lua',
+])
+
+const NON_EXECUTABLE_LANGS = new Set([
+  'bash', 'sh', 'shell', 'zsh', 'terminal', 'console', 'cmd', 'powershell', 'ps1',
+  'html', 'htm', 'xml', 'svg', 'vue', 'svelte',
+  'css', 'scss', 'sass', 'less', 'postcss',
+  'json', 'jsonc', 'yaml', 'yml', 'toml', 'ini', 'env',
+  'markdown', 'md', 'mdx',
+  'sql', 'mysql', 'postgres', 'sqlite', 'graphql', 'prisma',
+  'dockerfile', 'docker', 'makefile', 'cmake',
+  'text', 'txt', 'plaintext', 'output', 'log', 'diff', 'git',
+  'pseudocode', 'pseudo', 'latex', 'tex', 'bib',
+  'code', 'none', ''
+])
+
 function extractCodeTitle(code: string, language: string): string {
   const lines = code.split('\n').map(l => l.trim()).filter(Boolean)
 
@@ -70,7 +99,7 @@ function extractCodeTitle(code: string, language: string): string {
     return formatTitle(classMatch[1])
   }
 
-  return (language ? language.toUpperCase() : 'Code')
+  return ''
 }
 
 function escapeHtml(str: string): string {
@@ -147,24 +176,52 @@ export function CodeBlock({ language = '', code }: CodeBlockProps) {
   }, [code, language])
 
   const codeTitle = useMemo(() => extractCodeTitle(code, langDisplay), [code, langDisplay])
+  const hasCustomTitle = Boolean(
+    codeTitle && 
+    codeTitle.toLowerCase() !== langDisplay.toLowerCase() && 
+    codeTitle.toLowerCase() !== 'code'
+  )
 
-  // Check if code block is executable code vs terminal output / config / markdown
+  // Check if code block is truly executable code vs terminal output / config / markdown
   const isExecutable = useMemo(() => {
-    const raw = (language || langDisplay || '').toLowerCase().trim()
-    const nonExecutable = [
-      'bash', 'sh', 'shell', 'zsh', 'terminal', 'console', 'output', 
-      'text', 'txt', 'plaintext', 'json', 'yaml', 'yml', 'markdown', 
-      'md', 'html', 'css', 'xml', 'dockerfile', 'graphql'
-    ]
-    if (nonExecutable.includes(raw)) return false
-
+    const raw = (language || '').toLowerCase().trim()
+    const resolved = LANG_ALIASES[raw] || raw
     const trimmed = code.trim()
+
+    // 1. Must be non-empty code with at least 15 characters (filters out single variables like 'target')
+    if (!trimmed || trimmed.length < 15) return false
+
+    // 2. Terminal commands, prompt lines ($ or >) should never be runnable
     if (/^\$\s+[a-zA-Z0-9_\-]+/m.test(trimmed) || trimmed.startsWith('> ') || trimmed.startsWith('>>> ')) {
       return false
     }
 
-    return true
-  }, [language, langDisplay, code])
+    // 3. If explicit non-executable language, reject immediately
+    if (NON_EXECUTABLE_LANGS.has(resolved) || NON_EXECUTABLE_LANGS.has(raw)) {
+      return false
+    }
+
+    // 4. If explicit executable language, allow execution
+    if (EXECUTABLE_LANGS.has(resolved) || EXECUTABLE_LANGS.has(raw)) {
+      return true
+    }
+
+    // 5. If no language was specified (or 'code'), only allow if strong unambiguous code signatures exist
+    if (!resolved || resolved === 'code') {
+      const hasPythonSig = /def\s+[a-zA-Z0-9_]+\s*\(|import\s+(?:math|sys|os|re|collections|itertools|heapq)|print\s*\(/i.test(trimmed)
+      const hasCppSig = /#include\s*<|int\s+main\s*\(|std::|cout\s*<<|printf\s*\(/i.test(trimmed)
+      const hasJsSig = /console\.log\s*\(|function\s+[a-zA-Z0-9_]+\s*\(|const\s+[a-zA-Z0-9_]+\s*=\s*(?:\([^)]*\)|[a-zA-Z0-9_]+)\s*=>/i.test(trimmed)
+      const hasJavaSig = /public\s+class\s+|public\s+static\s+void\s+main/i.test(trimmed)
+      const hasRustSig = /fn\s+main\s*\(|println!\s*\(/i.test(trimmed)
+      const hasGoSig = /package\s+main|func\s+main\s*\(/i.test(trimmed)
+
+      if (hasPythonSig || hasCppSig || hasJsSig || hasJavaSig || hasRustSig || hasGoSig) {
+        return true
+      }
+    }
+
+    return false
+  }, [language, code])
 
   // Check if code might accept stdin
   const hasInteractiveInput = useMemo(() => {
@@ -223,12 +280,14 @@ export function CodeBlock({ language = '', code }: CodeBlockProps) {
         {/* Left: Concise Code Title & Language Badge */}
         <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden text-[#CCCCCC] font-medium tracking-wide">
           <Code2 className="w-3.5 h-3.5 text-[#00C8FF] shrink-0" />
-          <span 
-            className="font-semibold text-white text-[12.5px] sm:text-[13.5px] tracking-tight truncate max-w-[130px] xs:max-w-[190px] sm:max-w-[280px] md:max-w-none"
-            title={codeTitle}
-          >
-            {codeTitle}
-          </span>
+          {hasCustomTitle && (
+            <span 
+              className="font-semibold text-white text-[12.5px] sm:text-[13.5px] tracking-tight truncate max-w-[130px] xs:max-w-[190px] sm:max-w-[280px] md:max-w-none"
+              title={codeTitle}
+            >
+              {codeTitle}
+            </span>
+          )}
           <span className="text-[9.5px] sm:text-[10.5px] font-bold text-[#00C8FF] bg-[#00C8FF]/10 px-1.5 sm:px-2 py-0.5 rounded border border-[#00C8FF]/20 uppercase tracking-wider shrink-0">
             {langDisplay}
           </span>
